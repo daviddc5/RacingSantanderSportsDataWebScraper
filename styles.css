@@ -1,15 +1,185 @@
+/* Racing Santander Website - Main Styles */
+
+/* Import Font Awesome */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+
+/* Import CSS files */
+@import url("css/header.css");
+@import url("css/footer.css");
+@import url("css/hero.css");
+@import url("css/api-data.css");
+@import url("css/squad.css");
+@import url("css/history.css");
+
+/* CSS Variables */
+:root {
+  --color-green: #00a651;
+  --color-green-dark: #007a2d;
+  --color-white: #ffffff;
+  --color-grey-light: #f8f9fa;
+  --color-grey-medium: #6c757d;
+  --color-grey-dark: #343a40;
+  --color-black: #000000;
+  --font-primary: "Lato", sans-serif;
+  --font-heading: "Oswald", sans-serif;
+}
+
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-primary);
+  line-height: 1.6;
+  color: var(--color-grey-dark);
+  background-color: var(--color-grey-light);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+h3 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+/* Links */
+a {
+  color: var(--color-green);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--color-green-dark);
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: var(--color-green);
+  color: var(--color-white);
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--color-green-dark);
+  color: var(--color-white);
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mb-1 {
+  margin-bottom: 0.5rem;
+}
+.mb-2 {
+  margin-bottom: 1rem;
+}
+.mb-3 {
+  margin-bottom: 1.5rem;
+}
+.mb-4 {
+  margin-bottom: 2rem;
+}
+
+.mt-1 {
+  margin-top: 0.5rem;
+}
+.mt-2 {
+  margin-top: 1rem;
+}
+.mt-3 {
+  margin-top: 1.5rem;
+}
+.mt-4 {
+  margin-top: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+  }
+}
+
 /* ------------------- */
 /* 1. Global & Setup   */
 /* ------------------- */
-:root {
-  --color-green: #009639;
-  --color-black: #000000;
-  --color-white: #ffffff;
-  --color-grey-light: #f4f4f4;
-  --color-grey-dark: #333333;
-  --font-heading: "Oswald", sans-serif;
-  --font-body: "Lato", sans-serif;
-}
 * {
   margin: 0;
   padding: 0;
@@ -21,7 +191,7 @@ html {
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-primary);
   line-height: 1.6;
   background-color: var(--color-grey-light);
   color: var(--color-grey-dark);
@@ -123,7 +293,7 @@ main {
   color: var(--color-white);
 }
 .hero h3 {
-  font-family: var(--font-body);
+  font-family: var(--font-primary);
   font-size: 1.2rem;
   text-transform: none;
   color: var(--color-white);
@@ -368,10 +538,10 @@ footer {
 .footer-column a {
   color: rgba(255, 255, 255, 0.8);
 }
-.logo-footer {
+/* .logo-footer {
   height: 50px;
   margin: 0 auto 15px auto;
-}
+} */
 .social-icons a {
   color: var(--color-white);
   font-size: 1.5rem;
