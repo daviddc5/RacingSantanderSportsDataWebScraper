@@ -130,9 +130,18 @@ class ComponentLoader {
           <div class="footer-column">
             <h4>FOLLOW US</h4>
             <div class="social-icons">
-              <a href="#" aria-label="Twitter">Twitter</a>
-              <a href="#" aria-label="Instagram">Instagram</a>
-              <a href="#" aria-label="YouTube">Youtube</a>
+              <a href="https://x.com/realracingclub" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                <i class="fab fa-twitter"></i>
+                Twitter
+              </a>
+              <a href="https://www.instagram.com/realracingclub/?hl=es" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <i class="fab fa-instagram"></i>
+                Instagram
+              </a>
+              <a href="https://www.youtube.com/realracingclubsantandersad" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                <i class="fab fa-youtube"></i>
+                YouTube
+              </a>
             </div>
           </div>
         </div>
