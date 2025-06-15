@@ -1,206 +1,287 @@
-# Racing Santander Match Data API Setup
+# Racing Santander Football Data API Integration
 
-This guide explains how to set up real-time match data for the Racing Santander website.
+This guide explains how to set up real-time football data for the Racing Santander website using a comprehensive API solution.
 
-## Overview
+## 🚀 New Features
 
-The website now includes two solutions for displaying match data:
+The website now includes dynamic data for:
 
-1. **JavaScript API Solution** (`matchData.js`) - Fetches data from football APIs
-2. **Iframe Solution** (`iframeSolution.html`) - Embeds external match data widgets
+- ✅ **Squad Information** - Real player data with photos, positions, ages, nationalities
+- ✅ **Upcoming Fixtures** - Next 5 matches with dates, times, venues, and team logos
+- ✅ **League Position** - Current standings with detailed statistics
+- ✅ **Fallback Data** - Works offline with realistic placeholder data
+- ✅ **Loading States** - Professional loading animations
+- ✅ **Error Handling** - Graceful error recovery
+- ✅ **API Status Indicators** - Shows whether data is live or fallback
 
-## Option 1: JavaScript API Solution
+## 📋 Setup Instructions
 
-### Setup Instructions
-
-#### Step 1: Get API Keys
-
-Choose one of these football APIs:
+### Step 1: Choose Your API Provider
 
 **Option A: API-Football (Recommended)**
 
-- Visit: https://rapidapi.com/api-sports/api/api-football/
-- Sign up for a free account
-- Subscribe to the API-Football service
-- Get your API key from the dashboard
+- **URL**: https://rapidapi.com/api-sports/api/api-football/
+- **Free Tier**: 100 requests/day, 1 request/second
+- **Paid Plans**: Starting at $10/month
+- **Coverage**: Comprehensive data for LaLiga2
 
-**Option B: Football-Data.org (Free)**
+**Option B: Football-Data.org (Alternative)**
 
-- Visit: https://www.football-data.org/
-- Sign up for a free account
-- Get your API key (free tier allows 10 requests per minute)
+- **URL**: https://www.football-data.org/
+- **Free Tier**: 10 requests/minute, 100 requests/day
+- **Paid Plans**: Starting at $25/month
+- **Coverage**: Good coverage for Spanish leagues
 
-#### Step 2: Configure the API
+### Step 2: Get Your API Key
 
-1. Open `matchData.js`
-2. Replace `'YOUR_API_KEY'` with your actual API key
-3. Find Racing Santander's team ID:
-   - For API-Football: Search for "Racing Santander" in their teams endpoint
-   - For Football-Data.org: Use their teams search endpoint
+#### For API-Football:
 
-#### Step 3: Update Team ID
+1. Visit https://rapidapi.com/api-sports/api/api-football/
+2. Sign up for a free account
+3. Subscribe to the API-Football service
+4. Copy your API key from the dashboard
 
-In `matchData.js`, update the `teamId` variable:
+#### For Football-Data.org:
+
+1. Visit https://www.football-data.org/
+2. Sign up for a free account
+3. Get your API key from your account dashboard
+
+### Step 3: Configure the API
+
+1. Open `footballAPIData.js`
+2. Find the `apiConfig` section
+3. Replace the API keys:
 
 ```javascript
-this.teamId = 123; // Replace with Racing Santander's actual team ID
+this.apiConfig = {
+  apiFootball: {
+    baseUrl: "https://api-football-v1.p.rapidapi.com/v3",
+    key: "YOUR_ACTUAL_RAPIDAPI_KEY_HERE", // Replace this
+    teamId: 8696, // Racing Santander team ID
+    enabled: true,
+  },
+  footballData: {
+    baseUrl: "https://api.football-data.org/v4",
+    key: "YOUR_ACTUAL_FOOTBALL_DATA_KEY_HERE", // Replace this
+    teamId: 8696, // Racing Santander team ID
+    enabled: false, // Set to true if you prefer this API
+  },
+};
 ```
 
-### API Endpoints Used
+### Step 4: Test the Setup
 
-**API-Football:**
-
-- Fixtures: `https://api-football-v1.p.rapidapi.com/v3/fixtures?team=${teamId}&next=5`
-- Results: `https://api-football-v1.p.rapidapi.com/v3/fixtures?team=${teamId}&last=5`
-
-**Football-Data.org:**
-
-- Matches: `https://api.football-data.org/v4/teams/${teamId}/matches?limit=10`
-
-### Features
-
-- ✅ Fetches upcoming fixtures
-- ✅ Fetches recent match results
-- ✅ Displays scores, dates, times, and venues
-- ✅ Fallback data when API is unavailable
-- ✅ Responsive design
-- ✅ Loading states
-
-## Option 2: Iframe Solution
-
-### Setup Instructions
-
-1. Open `iframeSolution.html` in your browser
-2. The page includes multiple iframe options:
-   - FlashScore (free, no API key needed)
-   - Sofascore
-   - ESPN
-   - LiveScore widget
-
-### Iframe Sources
-
-**FlashScore (Recommended - Free):**
-
-```html
-<iframe src="https://www.flashscore.com/team/racing-santander/ID/"></iframe>
-```
-
-**Sofascore:**
-
-```html
-<iframe src="https://www.sofascore.com/team/racing-santander/ID/"></iframe>
-```
-
-**ESPN:**
-
-```html
-<iframe src="https://www.espn.com/soccer/team/_/name/racing-santander"></iframe>
-```
-
-### Features
-
-- ✅ No API key required
-- ✅ Real-time data
-- ✅ Multiple source options
-- ✅ Fallback links when iframes fail
-- ✅ Responsive design
-
-## Testing the Setup
-
-### For API Solution:
-
-1. Open `index.html` in a web browser
+1. Open `index.html` in your browser
 2. Check the browser console for any API errors
-3. Verify that match data appears in both sections
-4. Test with network disconnected to see fallback data
+3. Look for the API status indicator (green for live data, yellow for fallback)
+4. Verify that squad, fixtures, and league position data appears
 
-### For Iframe Solution:
+## 🎯 What You Get
 
-1. Open `iframeSolution.html` in a web browser
-2. Check if iframes load properly
-3. Test fallback links if iframes fail to load
+### Squad Page (`squad.html`)
 
-## Troubleshooting
+- **Dynamic Player Cards**: Loaded from API with real photos
+- **Position Grouping**: Players organized by position (Goalkeepers, Defenders, etc.)
+- **Player Details**: Name, number, position, age, nationality
+- **Fallback Icons**: Football icons when player photos aren't available
+- **Loading Animation**: Professional spinner while data loads
 
-### Common Issues
+### Home Page (`index.html`)
 
-**API Errors:**
+- **League Position Card**: Current position with detailed stats
+- **Upcoming Fixtures**: Next 5 matches with team logos
+- **Real-time Data**: Updates automatically when API is available
+- **Responsive Design**: Works perfectly on mobile and desktop
 
-- Check API key is correct
-- Verify team ID is correct
-- Check API rate limits
-- Ensure CORS is enabled
+## 🔧 API Endpoints Used
 
-**Iframe Issues:**
+### API-Football Endpoints:
 
-- Some sites block iframe embedding
-- Use fallback links provided
-- Try different iframe sources
+- **Squad**: `/players/squad?team=8696`
+- **Fixtures**: `/fixtures?team=8696&next=5`
+- **League Position**: `/standings?league=140&season=2024&team=8696`
 
-**No Data Showing:**
+### Football-Data.org Endpoints:
+
+- **Squad**: `/teams/8696`
+- **Fixtures**: `/teams/8696/matches?limit=10`
+- **League Position**: `/competitions/2017/standings`
+
+## 📊 Data Structure
+
+### Squad Data Format:
+
+```javascript
+{
+    id: 123,
+    name: "Player Name",
+    number: "10",
+    position: "Forward",
+    age: 25,
+    nationality: "Spain",
+    photo: "player-photo-url.jpg"
+}
+```
+
+### Fixture Data Format:
+
+```javascript
+{
+    id: 456,
+    date: "2024-12-15T16:00:00",
+    homeTeam: "Racing Santander",
+    awayTeam: "Real Zaragoza",
+    homeLogo: "home-team-logo.png",
+    awayLogo: "away-team-logo.png",
+    venue: "El Sardinero",
+    competition: "LaLiga2",
+    round: "Matchday 20"
+}
+```
+
+### League Position Format:
+
+```javascript
+{
+    position: 8,
+    points: 28,
+    played: 19,
+    won: 8,
+    drawn: 4,
+    lost: 7,
+    goalsFor: 25,
+    goalsAgainst: 22,
+    goalDifference: 3
+}
+```
+
+## 🛠️ Customization Options
+
+### Change Team ID
+
+If you want to use this for a different team, update the `teamId` in both API configurations.
+
+### Modify Fallback Data
+
+Edit the `getFallbackData()` method in `footballAPIData.js` to customize the offline data.
+
+### Adjust API Settings
+
+- **Enable/Disable APIs**: Set `enabled: true/false` for each API
+- **Change Default API**: Modify `this.currentAPI = 'apiFootball'`
+- **Add More APIs**: Extend the `apiConfig` object
+
+## 🔍 Troubleshooting
+
+### Common Issues:
+
+**"API key invalid"**
+
+- Check your API key is correct
+- Verify you've subscribed to the API service
+- Check your API quota hasn't been exceeded
+
+**"No data showing"**
 
 - Check browser console for errors
 - Verify JavaScript is enabled
-- Test with fallback data
+- Test with fallback data (should always work)
 
-### Debug Mode
+**"CORS errors"**
 
-Add this to `matchData.js` for debugging:
+- API-Football and Football-Data.org support CORS
+- If using a different API, you may need a proxy
+
+**"Rate limit exceeded"**
+
+- Check your API plan limits
+- Consider upgrading to a paid plan
+- The fallback data will show when limits are reached
+
+### Debug Mode:
+
+Add this to `footballAPIData.js` for detailed logging:
 
 ```javascript
-// Add at the top of the file
+// Add at the top of the class
 const DEBUG = true;
 
-// Add in the fetch methods
+// Add in fetch methods
 if (DEBUG) {
   console.log("API Response:", data);
 }
 ```
 
-## File Structure
+## 💰 Cost Considerations
 
+### API-Football:
+
+- **Free**: 100 requests/day (sufficient for development)
+- **Basic**: $10/month - 1,000 requests/day
+- **Pro**: $25/month - 10,000 requests/day
+
+### Football-Data.org:
+
+- **Free**: 10 requests/minute (good for testing)
+- **Tier One**: $25/month - 50 requests/minute
+- **Tier Two**: $50/month - 100 requests/minute
+
+### Recommendation:
+
+Start with the free tiers for development, upgrade when going live.
+
+## 🚀 Deployment
+
+### For Production:
+
+1. Get a paid API plan for reliable data
+2. Set up proper error monitoring
+3. Consider caching strategies for better performance
+4. Test thoroughly with real API data
+
+### For Development:
+
+1. Use free API tiers
+2. Rely on fallback data for offline development
+3. Test API integration periodically
+
+## 📱 Mobile Optimization
+
+The solution is fully responsive and includes:
+
+- Mobile-friendly player cards
+- Touch-optimized fixture displays
+- Responsive league position cards
+- Optimized loading states for mobile
+
+## 🔄 Auto-Refresh
+
+The data loads automatically when pages load. For real-time updates, you could add:
+
+```javascript
+// Refresh data every 5 minutes
+setInterval(loadMatchData, 5 * 60 * 1000);
 ```
-├── index.html              # Main page with API integration
-├── iframeSolution.html     # Alternative iframe-based solution
-├── matchData.js           # JavaScript API handler
-├── styles.css             # Updated CSS with match styling
-└── README_API_SETUP.md    # This file
-```
 
-## API Rate Limits
-
-**API-Football (Free):**
-
-- 100 requests per day
-- 1 request per second
-
-**Football-Data.org (Free):**
-
-- 10 requests per minute
-- 100 requests per day
-
-## Cost Considerations
-
-- **API-Football**: Free tier available, paid plans start at $10/month
-- **Football-Data.org**: Free tier available, paid plans start at $25/month
-- **Iframe Solution**: Completely free
-
-## Recommendations
-
-1. **Start with iframe solution** - No setup required, immediate results
-2. **For production**: Use API solution with proper API key
-3. **For development**: Use fallback data to avoid API costs
-4. **For reliability**: Implement both solutions with fallbacks
-
-## Support
+## 📞 Support
 
 If you encounter issues:
 
-1. Check the browser console for error messages
-2. Verify API keys and team IDs
-3. Test with fallback data
-4. Check API documentation for endpoint changes
+1. **Check the browser console** for error messages
+2. **Verify API keys** are correct and active
+3. **Test with fallback data** to ensure the site works
+4. **Check API documentation** for endpoint changes
+5. **Monitor API quotas** to avoid rate limiting
 
-## Updates
+## 🎉 Success!
 
-The API endpoints and team IDs may change. Check the respective API documentation for the latest information.
+Once configured, your Racing Santander website will have:
+
+- ✅ Real-time squad data from professional APIs
+- ✅ Live upcoming fixtures with team information
+- ✅ Current league position and statistics
+- ✅ Beautiful, responsive design
+- ✅ Reliable fallback data when APIs are unavailable
+
+The website will automatically switch between live API data and fallback data, ensuring it always works for your visitors!
