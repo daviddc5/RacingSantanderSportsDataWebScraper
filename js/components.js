@@ -94,7 +94,7 @@ class ComponentLoader {
               <li><a href="${historyPath}">HISTORY</a></li>
             </ul>
           </nav>
-          <a href="#" class="cta-button">BUY TICKETS</a>
+          <a href="https://entradas.realracingclub.es/" target="_blank" rel="noopener noreferrer" class="cta-button">BUY TICKETS</a>
         </div>
       </header>
     `;
