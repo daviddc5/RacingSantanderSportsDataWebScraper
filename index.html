@@ -1,93 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Racing de Santander - Home</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Oswald:wght@700&display=swap" rel="stylesheet">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Oswald:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .iframe-container {
+        background: var(--color-white);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        margin: 20px 0;
+      }
 
+      .iframe-container iframe {
+        width: 100%;
+        height: 500px;
+        border: none;
+        border-radius: 4px;
+      }
+
+      .iframe-fallback {
+        background: var(--color-grey-light);
+        padding: 40px;
+        text-align: center;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+
+      .iframe-fallback h3 {
+        color: var(--color-green);
+        margin-bottom: 15px;
+      }
+
+      .iframe-fallback p {
+        color: var(--color-grey-dark);
+        margin-bottom: 20px;
+      }
+
+      .iframe-fallback a {
+        display: inline-block;
+        background: var(--color-green);
+        color: var(--color-white);
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: background-color 0.3s;
+      }
+
+      .iframe-fallback a:hover {
+        background: #007a2d;
+      }
+
+      .iframe-section h3 {
+        color: var(--color-green);
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+      }
+
+      .two-column-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      @media (min-width: 768px) {
+        .two-column-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
     <header>
-        <div class="header-container">
-            <a href="index.html" class="logo-link">
-                <img src="racingLogo.png" alt="Racing de Santander Crest" class="logo">
-            </a>
+      <div class="header-container">
+        <a href="index.html" class="logo-link">
+          <img
+            src="racingLogo.png"
+            alt="Racing de Santander Crest"
+            class="logo"
+          />
+        </a>
 
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="index.html" class="active">HOME</a></li>
-                    <li><a href="squad.html">SQUAD</a></li>
-                    <li><a href="history.html">HISTORY</a></li>
-                </ul>
-            </nav>
+        <nav class="main-nav">
+          <ul>
+            <li><a href="index.html" class="active">HOME</a></li>
+            <li><a href="squad.html">SQUAD</a></li>
+            <li><a href="history.html">HISTORY</a></li>
+          </ul>
+        </nav>
 
-            <a href="#" class="cta-button">BUY TICKETS</a>
-            <button class="hamburger-menu" aria-label="Open navigation menu">
-                <span></span><span></span><span></span>
-            </button>
-        </div>
+        <a href="#" class="cta-button">BUY TICKETS</a>
+        <button class="hamburger-menu" aria-label="Open navigation menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </header>
 
     <main>
-        <section class="hero">
-            <div class="hero-content">
-                <h1>SOMOS RACING</h1>
-                <h3>The heart of Cantabria beats here</h3>
-            </div>
-        </section>
+      <section class="hero">
+        <div class="hero-content">
+          <h1>SOMOS RACING</h1>
+          <h3>The heart of Cantabria beats here</h3>
+        </div>
+      </section>
 
-        <section class="upcoming-matches">
-            <div class="container">
-                <h2>UPCOMING MATCHES</h2>
-                <div class="matches-container">
-                    <div class="match-card">
-                        <div class="team team-home">
-                            <img src="racingLogo.png" alt="Racing Santander Logo">
-                            <h3>Racing</h3>
-                        </div>
-                        <div class="match-info">
-                            <p class="match-date">SAT, 22 JUNE 2025</p>
-                            <p class="match-time">21:00</p>
-                            <p class="match-venue">El Sardinero</p>
-                        </div>
-                        <div class="team team-away">
-                            <img src="realZaragoza.png" alt="Real Zaragoza Logo">
-                            <h3>R. Zaragoza</h3>
-                        </div>
-                    </div>
-                    <div class="match-card">
-                        <div class="team team-home">
-                             <img src="SportingLogo.png" alt="Sporting Gijon Logo">
-                            <h3>Sp. Gijón</h3>
-                        </div>
-                        <div class="match-info">
-                            <p class="match-date">SUN, 30 JUNE 2025</p>
-                            <p class="match-time">18:30</p>
-                            <p class="match-venue">El Molinón</p>
-                        </div>
-                        <div class="team team-away">
-                             <img src="racingLogo.png" alt="Racing Santander Logo">
-                            <h3>Racing</h3>
-                        </div>
-                    </div>
-                </div>
+      <section class="recent-results">
+        <div class="container">
+          <h2>LIVE MATCH DATA</h2>
+
+          <!-- Fotmob Fixtures - Main results and upcoming matches -->
+          <div class="iframe-container">
+            <h3>Fotmob - Fixtures & Results</h3>
+            <iframe
+              src="https://www.fotmob.com/en-GB/teams/8696/fixtures/racing-santander"
+              title="Fotmob Racing Santander Fixtures and Results"
+              onload="this.style.display='block'"
+              onerror="this.style.display='none'; document.getElementById('fallback1').style.display='block';"
+            >
+            </iframe>
+            <div id="fallback1" class="iframe-fallback" style="display: none">
+              <h3>Fotmob Fixtures Not Available</h3>
+              <p>
+                Unable to load fixtures and results. Please visit Fotmob for the
+                latest Racing Santander match information.
+              </p>
+              <a
+                href="https://www.fotmob.com/en-GB/teams/8696/fixtures/racing-santander"
+                target="_blank"
+                >View on Fotmob</a
+              >
             </div>
-        </section>
+          </div>
+
+          <!-- Two column layout for squad and table -->
+          <div class="two-column-grid">
+            <!-- Fotmob Squad -->
+            <div class="iframe-container">
+              <h3>Fotmob - Squad & Players</h3>
+              <iframe
+                src="https://www.fotmob.com/en-GB/teams/8696/squad/racing-santander"
+                title="Fotmob Racing Santander Squad"
+                onload="this.style.display='block'"
+                onerror="this.style.display='none'; document.getElementById('fallback2').style.display='block';"
+              >
+              </iframe>
+              <div id="fallback2" class="iframe-fallback" style="display: none">
+                <h3>Fotmob Squad Not Available</h3>
+                <p>
+                  Unable to load squad information. Please visit Fotmob for
+                  detailed player information.
+                </p>
+                <a
+                  href="https://www.fotmob.com/en-GB/teams/8696/squad/racing-santander"
+                  target="_blank"
+                  >View on Fotmob</a
+                >
+              </div>
+            </div>
+
+            <!-- Fotmob Table Position -->
+            <div class="iframe-container">
+              <h3>Fotmob - League Table & Position</h3>
+              <iframe
+                src="https://www.fotmob.com/en-GB/teams/8696/table/racing-santander"
+                title="Fotmob Racing Santander Table Position"
+                onload="this.style.display='block'"
+                onerror="this.style.display='none'; document.getElementById('fallback3').style.display='block';"
+              >
+              </iframe>
+              <div id="fallback3" class="iframe-fallback" style="display: none">
+                <h3>Fotmob Table Not Available</h3>
+                <p>
+                  Unable to load league table. Please visit Fotmob for current
+                  standings and position.
+                </p>
+                <a
+                  href="https://www.fotmob.com/en-GB/teams/8696/table/racing-santander"
+                  target="_blank"
+                  >View on Fotmob</a
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- LiveScore widget for additional live updates -->
+          <div class="iframe-container">
+            <h3>LiveScore - Live Match Updates</h3>
+            <div
+              id="livescore-widget"
+              style="
+                width: 100%;
+                height: 400px;
+                background: #f5f5f5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+              "
+            >
+              <div style="text-align: center">
+                <h4 style="color: var(--color-green); margin-bottom: 10px">
+                  LiveScore Widget
+                </h4>
+                <p style="color: var(--color-grey-dark); margin-bottom: 15px">
+                  Live match updates and scores
+                </p>
+                <a
+                  href="https://www.livescore.com/team/racing-santander/"
+                  target="_blank"
+                  style="
+                    background: var(--color-green);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    text-decoration: none;
+                    font-weight: bold;
+                  "
+                  >View on LiveScore</a
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Twitter feed for official club updates -->
+          <div class="iframe-container">
+            <h3>Twitter - Official Club Updates</h3>
+            <a
+              class="twitter-timeline"
+              data-height="400"
+              data-theme="light"
+              href="https://twitter.com/RacingSantander"
+            >
+            </a>
+            <script
+              async
+              src="https://platform.twitter.com/widgets.js"
+              charset="utf-8"
+            ></script>
+            <div id="fallback4" class="iframe-fallback" style="display: none">
+              <h3>Twitter Feed Not Available</h3>
+              <p>
+                Unable to load Twitter feed. Please visit Racing Santander's
+                official Twitter for live updates.
+              </p>
+              <a href="https://twitter.com/RacingSantander" target="_blank"
+                >View on Twitter</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer>
-        <div class="footer-container">
-            <div class="footer-column"><img src="racingLogo.png" alt="Racing de Santander Crest" class="logo-footer"><p>Founded in 1913. A historic club with a passionate heart. ¡Aúpa Racing!</p></div>
-            <div class="footer-column"><h4>NAVIGATION</h4><ul><li><a href="index.html">Home</a></li><li><a href="squad.html">Squad</a></li><li><a href="history.html">History</a></li></ul></div>
-            <div class="footer-column"><h4>FOLLOW US</h4><div class="social-icons"><a href="#" aria-label="Twitter">Twitter</a><a href="#" aria-label="Instagram">Instagram</a><a href="#" aria-label="YouTube">Youtube</a></div></div>
-           
+      <div class="footer-container">
+        <div class="footer-column">
+          <img
+            src="racingLogo.png"
+            alt="Racing de Santander Crest"
+            class="logo-footer"
+          />
+          <p>
+            Founded in 1913. A historic club with a passionate heart. ¡Aúpa
+            Racing!
+          </p>
         </div>
-        <div class="footer-bottom"><p>© 2025 David Diaz Clifton Racing Fan Page</p></div>
+        <div class="footer-column">
+          <h4>NAVIGATION</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="squad.html">Squad</a></li>
+            <li><a href="history.html">History</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>FOLLOW US</h4>
+          <div class="social-icons">
+            <a href="#" aria-label="Twitter">Twitter</a
+            ><a href="#" aria-label="Instagram">Instagram</a
+            ><a href="#" aria-label="YouTube">Youtube</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 David Diaz Clifton Racing Fan Page</p>
+      </div>
     </footer>
-
-</body>
+  </body>
 </html>

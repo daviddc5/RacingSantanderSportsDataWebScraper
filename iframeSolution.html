@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Racing de Santander - Match Results (Iframe Solution)</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Oswald:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .iframe-container {
+        background: var(--color-white);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        margin: 20px 0;
+      }
+
+      .iframe-container iframe {
+        width: 100%;
+        height: 600px;
+        border: none;
+        border-radius: 4px;
+      }
+
+      .iframe-fallback {
+        background: var(--color-grey-light);
+        padding: 40px;
+        text-align: center;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+
+      .iframe-fallback h3 {
+        color: var(--color-green);
+        margin-bottom: 15px;
+      }
+
+      .iframe-fallback p {
+        color: var(--color-grey-dark);
+        margin-bottom: 20px;
+      }
+
+      .iframe-fallback a {
+        display: inline-block;
+        background: var(--color-green);
+        color: var(--color-white);
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .iframe-fallback a:hover {
+        background: #007a2d;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-container">
+        <a href="index.html" class="logo-link">
+          <img
+            src="racingLogo.png"
+            alt="Racing de Santander Crest"
+            class="logo"
+          />
+        </a>
+
+        <nav class="main-nav">
+          <ul>
+            <li><a href="index.html">HOME</a></li>
+            <li><a href="squad.html">SQUAD</a></li>
+            <li><a href="history.html">HISTORY</a></li>
+          </ul>
+        </nav>
+
+        <a href="#" class="cta-button">BUY TICKETS</a>
+        <button class="hamburger-menu" aria-label="Open navigation menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-content">
+          <h1>SOMOS RACING</h1>
+          <h3>The heart of Cantabria beats here</h3>
+        </div>
+      </section>
+
+      <section class="recent-results">
+        <div class="container">
+          <h2>RECENT RESULTS & FIXTURES</h2>
+
+          <!-- Option 1: FlashScore iframe (free, no API key needed) -->
+          <div class="iframe-container">
+            <h3>Live Results & Fixtures</h3>
+            <iframe
+              src="https://www.flashscore.com/team/racing-santander/ID/"
+              title="Racing Santander Results and Fixtures"
+              onload="this.style.display='block'"
+              onerror="this.style.display='none'; document.getElementById('fallback1').style.display='block';"
+            >
+            </iframe>
+            <div id="fallback1" class="iframe-fallback" style="display: none">
+              <h3>Results Not Available</h3>
+              <p>
+                Unable to load live results. Please visit the official source
+                for the latest information.
+              </p>
+              <a
+                href="https://www.flashscore.com/team/racing-santander/"
+                target="_blank"
+                >View on FlashScore</a
+              >
+            </div>
+          </div>
+
+          <!-- Option 2: Sofascore iframe -->
+          <div class="iframe-container">
+            <h3>Match Statistics</h3>
+            <iframe
+              src="https://www.sofascore.com/team/racing-santander/ID/"
+              title="Racing Santander Statistics"
+              onload="this.style.display='block'"
+              onerror="this.style.display='none'; document.getElementById('fallback2').style.display='block';"
+            >
+            </iframe>
+            <div id="fallback2" class="iframe-fallback" style="display: none">
+              <h3>Statistics Not Available</h3>
+              <p>
+                Unable to load match statistics. Please visit the official
+                source for detailed information.
+              </p>
+              <a
+                href="https://www.sofascore.com/team/racing-santander/"
+                target="_blank"
+                >View on Sofascore</a
+              >
+            </div>
+          </div>
+
+          <!-- Option 3: ESPN iframe -->
+          <div class="iframe-container">
+            <h3>ESPN Match Center</h3>
+            <iframe
+              src="https://www.espn.com/soccer/team/_/name/racing-santander"
+              title="ESPN Racing Santander"
+              onload="this.style.display='block'"
+              onerror="this.style.display='none'; document.getElementById('fallback3').style.display='block';"
+            >
+            </iframe>
+            <div id="fallback3" class="iframe-fallback" style="display: none">
+              <h3>ESPN Content Not Available</h3>
+              <p>
+                Unable to load ESPN content. Please visit ESPN for the latest
+                news and results.
+              </p>
+              <a
+                href="https://www.espn.com/soccer/team/_/name/racing-santander"
+                target="_blank"
+                >View on ESPN</a
+              >
+            </div>
+          </div>
+
+          <!-- Alternative: Simple embedded widget -->
+          <div class="iframe-container">
+            <h3>Live Score Widget</h3>
+            <script
+              type="text/javascript"
+              src="https://www.livescore.com/js/widget/widget_loader.js"
+            ></script>
+            <div id="livescore-widget" style="width: 100%; height: 400px"></div>
+            <script>
+              // Initialize LiveScore widget
+              if (typeof LiveScoreWidget !== "undefined") {
+                LiveScoreWidget.init({
+                  widgetId: "livescore-widget",
+                  teamId: "racing-santander", // You'll need to find the correct team ID
+                  width: "100%",
+                  height: "400px",
+                });
+              }
+            </script>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-container">
+        <div class="footer-column">
+          <img
+            src="racingLogo.png"
+            alt="Racing de Santander Crest"
+            class="logo-footer"
+          />
+          <p>
+            Founded in 1913. A historic club with a passionate heart. ¡Aúpa
+            Racing!
+          </p>
+        </div>
+        <div class="footer-column">
+          <h4>NAVIGATION</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="squad.html">Squad</a></li>
+            <li><a href="history.html">History</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>FOLLOW US</h4>
+          <div class="social-icons">
+            <a href="#" aria-label="Twitter">Twitter</a
+            ><a href="#" aria-label="Instagram">Instagram</a
+            ><a href="#" aria-label="YouTube">Youtube</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 David Diaz Clifton Racing Fan Page</p>
+      </div>
+    </footer>
+  </body>
+</html>
