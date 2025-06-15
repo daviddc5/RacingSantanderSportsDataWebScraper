@@ -62,7 +62,7 @@ class ComponentLoader {
       <header>
         <div class="header-container">
           <a href="index.html" class="logo-link">
-            <img src="racingLogo.png" alt="Racing de Santander Crest" class="logo">
+            <img src="images/racingLogo.png" alt="Racing de Santander Crest" class="logo">
           </a>
           <nav class="main-nav">
             <ul>
@@ -83,7 +83,7 @@ class ComponentLoader {
       <footer>
         <div class="footer-container">
           <div class="footer-column">
-            <img src="racingLogo.png" alt="Racing de Santander Crest" class="logo-footer">
+            <img src="images/racingLogo.png" alt="Racing de Santander Crest" class="logo-footer">
             <p>Founded in 1913. A historic club with a passionate heart. ¡Aúpa Racing!</p>
           </div>
           <div class="footer-column">

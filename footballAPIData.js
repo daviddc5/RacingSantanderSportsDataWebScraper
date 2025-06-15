@@ -144,7 +144,7 @@ class RacingFootballData {
       ),
       age: player.player.age,
       nationality: player.player.nationality,
-      photo: player.player.photo || "racingLogo.png",
+      photo: player.player.photo || "images/racingLogo.png",
     }));
   }
 
@@ -210,7 +210,7 @@ class RacingFootballData {
           position: "Goalkeeper",
           age: 25,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 2,
@@ -219,7 +219,7 @@ class RacingFootballData {
           position: "Goalkeeper",
           age: 27,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 3,
@@ -228,7 +228,7 @@ class RacingFootballData {
           position: "Defender",
           age: 23,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 4,
@@ -237,7 +237,7 @@ class RacingFootballData {
           position: "Defender",
           age: 24,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 5,
@@ -246,7 +246,7 @@ class RacingFootballData {
           position: "Defender",
           age: 22,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 6,
@@ -255,7 +255,7 @@ class RacingFootballData {
           position: "Defender",
           age: 25,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 7,
@@ -264,7 +264,7 @@ class RacingFootballData {
           position: "Defender",
           age: 26,
           nationality: "France",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 8,
@@ -273,7 +273,7 @@ class RacingFootballData {
           position: "Defender",
           age: 24,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 9,
@@ -282,7 +282,7 @@ class RacingFootballData {
           position: "Defender",
           age: 25,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 10,
@@ -291,7 +291,7 @@ class RacingFootballData {
           position: "Defender",
           age: 21,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 11,
@@ -300,7 +300,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 24,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 12,
@@ -309,7 +309,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 25,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 13,
@@ -318,7 +318,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 23,
           nationality: "Senegal",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 14,
@@ -327,7 +327,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 26,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 15,
@@ -336,7 +336,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 24,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 16,
@@ -345,7 +345,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 25,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 17,
@@ -354,7 +354,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 22,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 18,
@@ -363,7 +363,7 @@ class RacingFootballData {
           position: "Forward",
           age: 24,
           nationality: "Brazil",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 19,
@@ -372,7 +372,7 @@ class RacingFootballData {
           position: "Forward",
           age: 25,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 20,
@@ -381,7 +381,7 @@ class RacingFootballData {
           position: "Forward",
           age: 26,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 21,
@@ -390,7 +390,7 @@ class RacingFootballData {
           position: "Forward",
           age: 24,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 22,
@@ -399,7 +399,7 @@ class RacingFootballData {
           position: "Forward",
           age: 23,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
         {
           id: 23,
@@ -408,7 +408,7 @@ class RacingFootballData {
           position: "Forward",
           age: 25,
           nationality: "Spain",
-          photo: "racingLogo.png",
+          photo: "images/racingLogo.png",
         },
       ],
       fixtures: [
@@ -417,8 +417,8 @@ class RacingFootballData {
           date: new Date("2024-12-15T16:00:00"),
           homeTeam: "Racing Santander",
           awayTeam: "Real Zaragoza",
-          homeLogo: "racingLogo.png",
-          awayLogo: "realZaragoza.png",
+          homeLogo: "images/racingLogo.png",
+          awayLogo: "images/realZaragoza.png",
           venue: "El Sardinero",
           competition: "LaLiga2",
           round: "Matchday 20",
@@ -428,8 +428,8 @@ class RacingFootballData {
           date: new Date("2024-12-22T12:00:00"),
           homeTeam: "Sporting Gijón",
           awayTeam: "Racing Santander",
-          homeLogo: "SportingLogo.png",
-          awayLogo: "racingLogo.png",
+          homeLogo: "images/SportingLogo.png",
+          awayLogo: "images/racingLogo.png",
           venue: "El Molinón",
           competition: "LaLiga2",
           round: "Matchday 21",
@@ -439,8 +439,8 @@ class RacingFootballData {
           date: new Date("2024-12-29T18:30:00"),
           homeTeam: "Racing Santander",
           awayTeam: "Levante",
-          homeLogo: "racingLogo.png",
-          awayLogo: "racingLogo.png",
+          homeLogo: "images/racingLogo.png",
+          awayLogo: "images/racingLogo.png",
           venue: "El Sardinero",
           competition: "LaLiga2",
           round: "Matchday 22",

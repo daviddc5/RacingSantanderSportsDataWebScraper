@@ -63,8 +63,8 @@ class MatchDataHandler {
           venue: { name: "El Sardinero" },
         },
         teams: {
-          home: { name: "Racing Santander", logo: "racingLogo.png" },
-          away: { name: "Real Zaragoza", logo: "realZaragoza.png" },
+          home: { name: "Racing Santander", logo: "images/racingLogo.png" },
+          away: { name: "Real Zaragoza", logo: "images/realZaragoza.png" },
         },
       },
       {
@@ -73,8 +73,8 @@ class MatchDataHandler {
           venue: { name: "El Molinón" },
         },
         teams: {
-          home: { name: "Sporting Gijón", logo: "SportingLogo.png" },
-          away: { name: "Racing Santander", logo: "racingLogo.png" },
+          home: { name: "Sporting Gijón", logo: "images/SportingLogo.png" },
+          away: { name: "Racing Santander", logo: "images/racingLogo.png" },
         },
       },
     ];
@@ -88,7 +88,7 @@ class MatchDataHandler {
           venue: { name: "El Sardinero" },
         },
         teams: {
-          home: { name: "Racing Santander", logo: "racingLogo.png" },
+          home: { name: "Racing Santander", logo: "images/racingLogo.png" },
           away: { name: "CD Tenerife", logo: "tenerife-logo.png" },
         },
         goals: { home: 2, away: 1 },
@@ -100,7 +100,7 @@ class MatchDataHandler {
         },
         teams: {
           home: { name: "Málaga CF", logo: "malaga-logo.png" },
-          away: { name: "Racing Santander", logo: "racingLogo.png" },
+          away: { name: "Racing Santander", logo: "images/racingLogo.png" },
         },
         goals: { home: 0, away: 2 },
       },
