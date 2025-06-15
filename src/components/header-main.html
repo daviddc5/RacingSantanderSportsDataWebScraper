@@ -1,0 +1,64 @@
+<header>
+  <div class="header-container">
+    <a href="index.html" class="logo-link">
+      <img
+        src="images/racingLogo.png"
+        alt="Racing de Santander Crest"
+        class="logo"
+      />
+    </a>
+
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html" id="nav-home">HOME</a></li>
+        <li><a href="pages/squad.html" id="nav-squad">SQUAD</a></li>
+        <li><a href="pages/history.html" id="nav-history">HISTORY</a></li>
+      </ul>
+    </nav>
+
+    <a href="#" class="cta-button">BUY TICKETS</a>
+    <button class="hamburger-menu" aria-label="Open navigation menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<script>
+  // Header functionality
+  document.addEventListener("DOMContentLoaded", function () {
+    // Set active navigation based on current page
+    const currentPage =
+      window.location.pathname.split("/").pop() || "index.html";
+    const pageNavMap = {
+      "index.html": "nav-home",
+      "squad.html": "nav-squad",
+      "history.html": "nav-history",
+    };
+
+    const activeNavId = pageNavMap[currentPage];
+    if (activeNavId) {
+      const activeNav = document.getElementById(activeNavId);
+      if (activeNav) {
+        activeNav.classList.add("active");
+      }
+    }
+
+    // Mobile menu functionality
+    const hamburgerMenu = document.querySelector(".hamburger-menu");
+    const mainNav = document.querySelector(".main-nav");
+
+    hamburgerMenu.addEventListener("click", function () {
+      mainNav.classList.toggle("active");
+      this.classList.toggle("active");
+    });
+
+    // Close mobile menu when clicking on a link
+    const navLinkElements = document.querySelectorAll(".main-nav a");
+    navLinkElements.forEach((link) => {
+      link.addEventListener("click", function () {
+        mainNav.classList.remove("active");
+        hamburgerMenu.classList.remove("active");
+      });
+    });
+  });
+</script>

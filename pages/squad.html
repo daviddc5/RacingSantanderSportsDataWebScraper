@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Racing de Santander - Squad</title>
+
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="../src/styles/styles.css" />
+    <link rel="stylesheet" href="../src/styles/header.css" />
+    <link rel="stylesheet" href="../src/styles/footer.css" />
+    <link rel="stylesheet" href="../src/styles/squad.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../images/racingLogo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Oswald:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .squad-container {
+        padding: 40px 0;
+      }
+
+      .squad-header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .squad-header h2 {
+        color: var(--color-green);
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .squad-header p {
+        color: var(--color-grey-dark);
+        font-size: 1.1rem;
+      }
+
+      .position-section {
+        margin-bottom: 50px;
+      }
+
+      .position-title {
+        color: var(--color-green);
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+        text-align: center;
+        border-bottom: 2px solid var(--color-green);
+        padding-bottom: 10px;
+      }
+
+      .player-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .player-card {
+        background: var(--color-white);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .player-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .player-photo {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 15px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--color-grey-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .player-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .player-photo .fallback-icon {
+        font-size: 2rem;
+        color: var(--color-grey-dark);
+      }
+
+      .player-number {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: var(--color-green);
+        color: var(--color-white);
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .player-info {
+        text-align: center;
+      }
+
+      .player-name {
+        color: var(--color-grey-dark);
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+        font-weight: 700;
+      }
+
+      .player-position {
+        color: var(--color-green);
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .player-details {
+        font-size: 0.9rem;
+        color: var(--color-grey-dark);
+        margin-top: 10px;
+      }
+
+      .player-nationality {
+        font-style: italic;
+        color: var(--color-grey-medium);
+      }
+
+      .loading-container {
+        text-align: center;
+        padding: 60px 20px;
+      }
+
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid var(--color-grey-light);
+        border-top: 4px solid var(--color-green);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        color: var(--color-grey-dark);
+        font-size: 1.1rem;
+      }
+
+      .error-container {
+        text-align: center;
+        padding: 40px 20px;
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+
+      .error-container h3 {
+        color: #856404;
+        margin-bottom: 10px;
+      }
+
+      .error-container p {
+        color: #856404;
+        margin-bottom: 15px;
+      }
+
+      .refresh-button {
+        background: var(--color-green);
+        color: var(--color-white);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s;
+      }
+
+      .refresh-button:hover {
+        background: #007a2d;
+      }
+
+      .api-status {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+      }
+
+      .api-status.live {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .api-status.fallback {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      @media (max-width: 768px) {
+        .player-grid {
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 15px;
+        }
+
+        .squad-header h2 {
+          font-size: 2rem;
+        }
+
+        .position-title {
+          font-size: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header Component -->
+    <div id="header-placeholder"></div>
+
+    <!-- Main Content -->
+    <main>
+      <section class="squad-hero">
+        <div class="container">
+          <h1>First Team Squad</h1>
+          <p>Meet the players representing Racing de Santander</p>
+        </div>
+      </section>
+
+      <section class="squad-section">
+        <div class="container">
+          <div id="squad-container">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <p>Loading squad data...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Component -->
+    <div id="footer-placeholder"></div>
+
+    <!-- JavaScript Files -->
+    <script src="../src/scripts/components.js"></script>
+    <script src="../src/api/footballAPIData.js"></script>
+    <script>
+      // Initialize the API handler
+      const racingAPI = new RacingFootballData();
+
+      // Group players by position
+      function groupPlayersByPosition(players) {
+        const positions = {
+          Goalkeeper: [],
+          Defender: [],
+          Midfielder: [],
+          Forward: [],
+        };
+
+        players.forEach((player) => {
+          if (positions[player.position]) {
+            positions[player.position].push(player);
+          } else {
+            // Default to Midfielder for unknown positions
+            positions["Midfielder"].push(player);
+          }
+        });
+
+        return positions;
+      }
+
+      // Render squad data
+      function renderSquad(players) {
+        const container = document.getElementById("squad-container");
+        const groupedPlayers = groupPlayersByPosition(players);
+
+        let html = "";
+
+        // Render each position group
+        Object.keys(groupedPlayers).forEach((position) => {
+          const positionPlayers = groupedPlayers[position];
+          if (positionPlayers.length > 0) {
+            html += `
+              <div class="position-group">
+                <h2 class="position-title">${position}s</h2>
+                <div class="players-grid">
+                  ${positionPlayers
+                    .map(
+                      (player) => `
+                    <div class="player-card">
+                      <div class="player-photo">
+                        <img src="${player.photo}" alt="${player.name}" 
+                             onerror="this.src='../images/racingLogo.png'">
+                      </div>
+                      <div class="player-info">
+                        <h3 class="player-name">${player.name}</h3>
+                        <div class="player-number">#${player.number}</div>
+                        <div class="player-details">
+                          <p><strong>Position:</strong> ${player.position}</p>
+                          <p><strong>Age:</strong> ${player.age}</p>
+                          <p><strong>Nationality:</strong> ${player.nationality}</p>
+                        </div>
+                      </div>
+                    </div>
+                  `
+                    )
+                    .join("")}
+                </div>
+              </div>
+            `;
+          }
+        });
+
+        container.innerHTML = html;
+      }
+
+      // Load squad data
+      async function loadSquad() {
+        try {
+          const squad = await racingAPI.getSquadData();
+          if (squad && squad.length > 0) {
+            renderSquad(squad);
+          } else {
+            document.getElementById("squad-container").innerHTML =
+              "<p>No squad data available</p>";
+          }
+        } catch (error) {
+          console.error("Error loading squad:", error);
+          document.getElementById("squad-container").innerHTML =
+            "<p>Error loading squad data</p>";
+        }
+      }
+
+      // Load squad when page loads
+      document.addEventListener("DOMContentLoaded", function () {
+        loadSquad();
+      });
+    </script>
+  </body>
+</html>

@@ -3,212 +3,196 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Racing de Santander - Home</title>
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <title>Racing de Santander - Official Fan Page</title>
+
+    <!-- Font Awesome for icons -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Oswald:wght@700&display=swap"
       rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="src/styles/styles.css" />
+    <link rel="stylesheet" href="src/styles/header.css" />
+    <link rel="stylesheet" href="src/styles/footer.css" />
+    <link rel="stylesheet" href="src/styles/hero.css" />
+    <link rel="stylesheet" href="src/styles/api-data.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/racingLogo.png" />
   </head>
   <body>
-    <!-- Header Component Placeholder -->
+    <!-- Header Component -->
     <div id="header-placeholder"></div>
 
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>RACING DE SANTANDER</h1>
+        <h3>Founded in 1913 • El Sardinero Stadium</h3>
+      </div>
+    </section>
+
+    <!-- Main Content -->
     <main>
-      <section class="hero">
-        <div class="hero-content">
-          <h1>SOMOS RACING</h1>
-          <h3>The heart of Cantabria beats here</h3>
+      <!-- League Position Section -->
+      <section class="league-position-section">
+        <div class="container">
+          <h2>Current League Position</h2>
+          <div id="league-position-container" class="league-position-card">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <p>Loading league data...</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- API-powered sections -->
-      <section class="api-data-section">
+      <!-- Upcoming Fixtures Section -->
+      <section class="fixtures-section">
         <div class="container">
-          <div id="apiStatus" class="api-status" style="display: none"></div>
-
-          <!-- League Position -->
-          <div id="leaguePositionContainer" style="display: none">
-            <h3>Current League Position</h3>
-            <div id="leaguePositionContent"></div>
+          <h2>Upcoming Fixtures</h2>
+          <div id="fixtures-container" class="fixtures-grid">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <p>Loading fixtures...</p>
+            </div>
           </div>
+        </div>
+      </section>
 
-          <!-- Upcoming Fixtures -->
-          <div id="fixturesContainer" style="display: none">
-            <h3>Upcoming Fixtures</h3>
-            <div id="fixturesContent" class="fixtures-grid"></div>
-          </div>
-
-          <!-- Loading state -->
-          <div id="loadingContainer" class="loading-container">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">Loading match data...</p>
+      <!-- Quick Links Section -->
+      <section class="quick-links-section">
+        <div class="container">
+          <h2>Quick Links</h2>
+          <div class="quick-links-grid">
+            <a href="pages/squad.html" class="quick-link-card">
+              <i class="fas fa-users"></i>
+              <h3>Squad</h3>
+              <p>View the current team roster</p>
+            </a>
+            <a href="pages/history.html" class="quick-link-card">
+              <i class="fas fa-history"></i>
+              <h3>History</h3>
+              <p>Explore the club's rich history</p>
+            </a>
+            <a href="#" class="quick-link-card">
+              <i class="fas fa-ticket-alt"></i>
+              <h3>Buy Tickets</h3>
+              <p>Get tickets for upcoming matches</p>
+            </a>
+            <a href="#" class="quick-link-card">
+              <i class="fas fa-store"></i>
+              <h3>Shop</h3>
+              <p>Official merchandise and gear</p>
+            </a>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- Footer Component Placeholder -->
+    <!-- Footer Component -->
     <div id="footer-placeholder"></div>
 
-    <!-- Scripts -->
-    <script src="js/components.js"></script>
-    <script src="footballAPIData.js"></script>
+    <!-- JavaScript Files -->
+    <script src="src/scripts/components.js"></script>
+    <script src="src/api/footballAPIData.js"></script>
     <script>
-      // Home page functionality
-      let fixturesData = [];
-      let leaguePositionData = null;
+      // Initialize the API handler
+      const racingAPI = new RacingFootballData();
 
-      // Load data when page loads
-      document.addEventListener("DOMContentLoaded", function () {
-        loadMatchData();
-      });
-
-      async function loadMatchData() {
-        const loadingContainer = document.getElementById("loadingContainer");
-        const apiStatus = document.getElementById("apiStatus");
-        const leaguePositionContainer = document.getElementById(
-          "leaguePositionContainer"
-        );
-        const fixturesContainer = document.getElementById("fixturesContainer");
-
-        // Show loading state
-        loadingContainer.style.display = "block";
-        apiStatus.style.display = "none";
-        leaguePositionContainer.style.display = "none";
-        fixturesContainer.style.display = "none";
-
+      // Load league position data
+      async function loadLeaguePosition() {
         try {
-          // Load both fixtures and league position
-          const [fixtures, leaguePosition] = await Promise.all([
-            racingAPI.getUpcomingFixtures(5),
-            racingAPI.getLeaguePosition(),
-          ]);
+          const position = await racingAPI.getLeaguePosition();
+          const container = document.getElementById(
+            "league-position-container"
+          );
 
-          fixturesData = fixtures;
-          leaguePositionData = leaguePosition;
-
-          // Check if we got real API data or fallback
-          const isLiveData =
-            fixturesData.length > 0 && fixturesData[0].hasOwnProperty("date");
-
-          // Show API status
-          apiStatus.style.display = "block";
-          if (isLiveData) {
-            apiStatus.className = "api-status live";
-            apiStatus.textContent = "✓ Live data from API";
+          if (position) {
+            container.innerHTML = `
+              <div class="position-info">
+                <div class="position-number">${position.position}</div>
+                <div class="position-details">
+                  <h3>League Position</h3>
+                  <p>Points: ${position.points}</p>
+                  <p>Played: ${position.played} | Won: ${
+              position.won
+            } | Drawn: ${position.drawn} | Lost: ${position.lost}</p>
+                  <p>Goals: ${position.goalsFor} For, ${
+              position.goalsAgainst
+            } Against (${position.goalDifference > 0 ? "+" : ""}${
+              position.goalDifference
+            })</p>
+                </div>
+              </div>
+            `;
           } else {
-            apiStatus.className = "api-status fallback";
-            apiStatus.textContent = "⚠ Using fallback data (API unavailable)";
+            container.innerHTML = "<p>League position data unavailable</p>";
           }
-
-          // Render data
-          if (leaguePositionData) {
-            renderLeaguePosition(leaguePositionData);
-            leaguePositionContainer.style.display = "block";
-          }
-
-          if (fixturesData.length > 0) {
-            renderFixtures(fixturesData);
-            fixturesContainer.style.display = "block";
-          }
-
-          // Hide loading
-          loadingContainer.style.display = "none";
         } catch (error) {
-          console.error("Error loading match data:", error);
-          loadingContainer.style.display = "none";
+          console.error("Error loading league position:", error);
+          document.getElementById("league-position-container").innerHTML =
+            "<p>Error loading league position</p>";
         }
       }
 
-      function renderLeaguePosition(data) {
-        const container = document.getElementById("leaguePositionContent");
+      // Load upcoming fixtures
+      async function loadFixtures() {
+        try {
+          const fixtures = await racingAPI.getUpcomingFixtures(5);
+          const container = document.getElementById("fixtures-container");
 
-        const html = `
-          <div class="league-position-card">
-            <div class="position-number">${data.position}</div>
-            <div class="position-label">Current Position</div>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <div class="stat-value">${data.points}</div>
-                <div class="stat-label">Points</div>
+          if (fixtures && fixtures.length > 0) {
+            container.innerHTML = fixtures
+              .map(
+                (fixture) => `
+              <div class="fixture-card">
+                <div class="fixture-date">
+                  <span class="day">${fixture.date.getDate()}</span>
+                  <span class="month">${fixture.date.toLocaleDateString(
+                    "en-US",
+                    { month: "short" }
+                  )}</span>
+                </div>
+                <div class="fixture-teams">
+                  <div class="team home-team">
+                    <img src="${fixture.homeLogo}" alt="${
+                  fixture.homeTeam
+                }" class="team-logo">
+                    <span class="team-name">${fixture.homeTeam}</span>
+                  </div>
+                  <div class="vs">vs</div>
+                  <div class="team away-team">
+                    <img src="${fixture.awayLogo}" alt="${
+                  fixture.awayTeam
+                }" class="team-logo">
+                    <span class="team-name">${fixture.awayTeam}</span>
+                  </div>
+                </div>
+                <div class="fixture-details">
+                  <p class="venue">${fixture.venue}</p>
+                  <p class="competition">${fixture.competition}</p>
+                </div>
               </div>
-              <div class="stat-item">
-                <div class="stat-value">${data.played}</div>
-                <div class="stat-label">Played</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">${data.won}</div>
-                <div class="stat-label">Won</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">${data.drawn}</div>
-                <div class="stat-label">Drawn</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">${data.lost}</div>
-                <div class="stat-label">Lost</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">${data.goalDifference > 0 ? "+" : ""}${
-          data.goalDifference
-        }</div>
-                <div class="stat-label">Goal Diff</div>
-              </div>
-            </div>
-          </div>
-        `;
-
-        container.innerHTML = html;
+            `
+              )
+              .join("");
+          } else {
+            container.innerHTML = "<p>No upcoming fixtures available</p>";
+          }
+        } catch (error) {
+          console.error("Error loading fixtures:", error);
+          document.getElementById("fixtures-container").innerHTML =
+            "<p>Error loading fixtures</p>";
+        }
       }
 
-      function renderFixtures(fixtures) {
-        const container = document.getElementById("fixturesContent");
-
-        let html = "";
-
-        fixtures.forEach((fixture) => {
-          const date = new Date(fixture.date);
-          const formattedDate = date.toLocaleDateString("en-GB", {
-            weekday: "short",
-            day: "numeric",
-            month: "short",
-          });
-          const formattedTime = date.toLocaleTimeString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
-          html += `
-            <div class="fixture-card">
-              <div class="team-info">
-                <div class="team-logo">
-                  <img src="${fixture.homeLogo}" alt="${fixture.homeTeam}" onerror="this.style.display='none'; this.parentElement.innerHTML='🏠';">
-                </div>
-                <div class="team-name">${fixture.homeTeam}</div>
-              </div>
-              
-              <div class="fixture-details">
-                <div class="vs-text">VS</div>
-                <div class="fixture-date">${formattedDate}</div>
-                <div class="fixture-venue">${formattedTime}</div>
-                <div class="fixture-competition">${fixture.competition}</div>
-              </div>
-              
-              <div class="team-info">
-                <div class="team-logo">
-                  <img src="${fixture.awayLogo}" alt="${fixture.awayTeam}" onerror="this.style.display='none'; this.parentElement.innerHTML='⚽';">
-                </div>
-                <div class="team-name">${fixture.awayTeam}</div>
-              </div>
-            </div>
-          `;
-        });
-
-        container.innerHTML = html;
-      }
+      // Load all data when page loads
+      document.addEventListener("DOMContentLoaded", function () {
+        loadLeaguePosition();
+        loadFixtures();
+      });
     </script>
   </body>
 </html>
