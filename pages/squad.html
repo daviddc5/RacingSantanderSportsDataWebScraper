@@ -306,9 +306,12 @@
           // Get squad data from API
           squadData = await racingAPI.getSquadData();
 
-          // Check if we got real API data or fallback
-          const isLiveData =
-            squadData.length > 0 && squadData[0].hasOwnProperty("age");
+          // Check if we got real API data or fallback using the isLiveData flag
+          const isLiveData = squadData.isLiveData === true;
+
+          console.log("Squad data received:", squadData);
+          console.log("isLiveData flag:", squadData.isLiveData);
+          console.log("API detection result:", isLiveData);
 
           // Show API status
           apiStatus.style.display = "block";

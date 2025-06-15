@@ -31,14 +31,20 @@ class RacingFootballData {
       if (this.apiConfig[this.currentAPI].enabled) {
         const data = await this.fetchSquadFromAPI();
         if (data && data.length > 0) {
-          return this.formatSquadData(data);
+          const formattedData = this.formatSquadData(data);
+          // Mark as live API data
+          formattedData.isLiveData = true;
+          return formattedData;
         }
       }
     } catch (error) {
       console.warn("API squad fetch failed, using fallback data:", error);
     }
 
-    return this.fallbackData.squad;
+    // Return fallback data with flag
+    const fallbackData = this.fallbackData.squad;
+    fallbackData.isLiveData = false;
+    return fallbackData;
   }
 
   // Get upcoming fixtures
@@ -47,14 +53,20 @@ class RacingFootballData {
       if (this.apiConfig[this.currentAPI].enabled) {
         const data = await this.fetchFixturesFromAPI(limit);
         if (data && data.length > 0) {
-          return this.formatFixturesData(data);
+          const formattedData = this.formatFixturesData(data);
+          // Mark as live API data
+          formattedData.isLiveData = true;
+          return formattedData;
         }
       }
     } catch (error) {
       console.warn("API fixtures fetch failed, using fallback data:", error);
     }
 
-    return this.fallbackData.fixtures;
+    // Return fallback data with flag
+    const fallbackData = this.fallbackData.fixtures;
+    fallbackData.isLiveData = false;
+    return fallbackData;
   }
 
   // Get league position
@@ -63,7 +75,10 @@ class RacingFootballData {
       if (this.apiConfig[this.currentAPI].enabled) {
         const data = await this.fetchLeaguePositionFromAPI();
         if (data) {
-          return this.formatLeaguePositionData(data);
+          const formattedData = this.formatLeaguePositionData(data);
+          // Mark as live API data
+          formattedData.isLiveData = true;
+          return formattedData;
         }
       }
     } catch (error) {
@@ -73,7 +88,10 @@ class RacingFootballData {
       );
     }
 
-    return this.fallbackData.leaguePosition;
+    // Return fallback data with flag
+    const fallbackData = this.fallbackData.leaguePosition;
+    fallbackData.isLiveData = false;
+    return fallbackData;
   }
 
   // API-Football squad fetch

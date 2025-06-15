@@ -90,9 +90,11 @@
           fixturesData = fixtures;
           leaguePositionData = leaguePosition;
 
-          // Check if we got real API data or fallback
+          // Check if we got real API data or fallback using the isLiveData flag
           const isLiveData =
-            fixturesData.length > 0 && fixturesData[0].hasOwnProperty("date");
+            fixtures.isLiveData === true || leaguePosition.isLiveData === true;
+
+          console.log(fixturesData);
 
           // Show API status
           apiStatus.style.display = "block";
