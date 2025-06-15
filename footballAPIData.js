@@ -9,7 +9,7 @@ class RacingFootballData {
       apiFootball: {
         baseUrl: "https://api-football-v1.p.rapidapi.com/v3",
         key: "bb04a7cf87msh24ec0f87ca2b2b7p19743fjsn26ab96dbe21e",
-        teamId: 8696, // This will be updated after we find the correct ID
+        teamId: 9643, // This will be updated after we find the correct ID
         enabled: true, // Enable since we have a valid API key
       },
     };
