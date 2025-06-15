@@ -338,6 +338,11 @@
       function renderSquad(players) {
         const squadContainer = document.getElementById("squadContainer");
 
+        // Detect if we're in the pages folder to adjust image paths
+        const currentPath = window.location.pathname;
+        const isInPagesFolder = currentPath.includes("/pages/");
+        const imageBasePath = isInPagesFolder ? "../" : "";
+
         // Group players by position
         const positions = {
           Goalkeeper: [],
@@ -373,10 +378,16 @@
                     `;
 
             positions[position].forEach((player) => {
+              // Adjust photo path based on current location
+              let photoPath = player.photo;
+              if (photoPath && photoPath.startsWith("images/")) {
+                photoPath = imageBasePath + photoPath;
+              }
+
               squadHTML += `
                             <div class="player-card">
                                 <div class="player-photo">
-                                    <img src="${player.photo}" alt="${
+                                    <img src="${photoPath}" alt="${
                 player.name
               }" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <div class="fallback-icon" style="display: none;">⚽</div>

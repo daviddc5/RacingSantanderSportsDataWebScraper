@@ -201,6 +201,9 @@ class RacingFootballData {
 
   // Fallback data when API is unavailable
   getFallbackData() {
+    // Use a generic path that can be adjusted by the calling page
+    const defaultPhoto = "images/racingLogo.png";
+
     return {
       squad: [
         {
@@ -210,7 +213,7 @@ class RacingFootballData {
           position: "Goalkeeper",
           age: 25,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 2,
@@ -219,7 +222,7 @@ class RacingFootballData {
           position: "Goalkeeper",
           age: 27,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 3,
@@ -228,7 +231,7 @@ class RacingFootballData {
           position: "Defender",
           age: 23,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 4,
@@ -237,7 +240,7 @@ class RacingFootballData {
           position: "Defender",
           age: 24,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 5,
@@ -246,7 +249,7 @@ class RacingFootballData {
           position: "Defender",
           age: 22,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 6,
@@ -255,7 +258,7 @@ class RacingFootballData {
           position: "Defender",
           age: 25,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 7,
@@ -264,7 +267,7 @@ class RacingFootballData {
           position: "Defender",
           age: 26,
           nationality: "France",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 8,
@@ -273,7 +276,7 @@ class RacingFootballData {
           position: "Defender",
           age: 24,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 9,
@@ -282,7 +285,7 @@ class RacingFootballData {
           position: "Defender",
           age: 25,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 10,
@@ -291,7 +294,7 @@ class RacingFootballData {
           position: "Defender",
           age: 21,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 11,
@@ -300,7 +303,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 24,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 12,
@@ -309,7 +312,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 25,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 13,
@@ -318,7 +321,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 23,
           nationality: "Senegal",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 14,
@@ -327,7 +330,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 26,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 15,
@@ -336,7 +339,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 24,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 16,
@@ -345,7 +348,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 25,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 17,
@@ -354,7 +357,7 @@ class RacingFootballData {
           position: "Midfielder",
           age: 22,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 18,
@@ -363,7 +366,7 @@ class RacingFootballData {
           position: "Forward",
           age: 24,
           nationality: "Brazil",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 19,
@@ -372,7 +375,7 @@ class RacingFootballData {
           position: "Forward",
           age: 25,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 20,
@@ -381,7 +384,7 @@ class RacingFootballData {
           position: "Forward",
           age: 26,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 21,
@@ -390,7 +393,7 @@ class RacingFootballData {
           position: "Forward",
           age: 24,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 22,
@@ -399,7 +402,7 @@ class RacingFootballData {
           position: "Forward",
           age: 23,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
         {
           id: 23,
@@ -408,7 +411,7 @@ class RacingFootballData {
           position: "Forward",
           age: 25,
           nationality: "Spain",
-          photo: "images/racingLogo.png",
+          photo: defaultPhoto,
         },
       ],
       fixtures: [
