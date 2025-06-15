@@ -1,18 +1,19 @@
 <header>
   <div class="header-container">
-    <a href="index.html" class="logo-link">
+    <a href="#" class="logo-link" id="logo-link">
       <img
         src="images/racingLogo.png"
         alt="Racing de Santander Crest"
         class="logo"
+        id="logo-image"
       />
     </a>
 
     <nav class="main-nav">
       <ul>
-        <li><a href="index.html" id="nav-home">HOME</a></li>
-        <li><a href="squad.html" id="nav-squad">SQUAD</a></li>
-        <li><a href="history.html" id="nav-history">HISTORY</a></li>
+        <li><a href="#" id="nav-home">HOME</a></li>
+        <li><a href="#" id="nav-squad">SQUAD</a></li>
+        <li><a href="#" id="nav-history">HISTORY</a></li>
       </ul>
     </nav>
 
@@ -24,8 +25,40 @@
 </header>
 
 <script>
+  // Set correct paths based on current page location
+  function setNavigationPaths() {
+    const currentPath = window.location.pathname;
+    const isInPagesFolder = currentPath.includes("/pages/");
+
+    // Set base paths
+    const homePath = isInPagesFolder ? "../index.html" : "index.html";
+    const squadPath = isInPagesFolder ? "squad.html" : "pages/squad.html";
+    const historyPath = isInPagesFolder ? "history.html" : "pages/history.html";
+    const imagePath = isInPagesFolder
+      ? "../images/racingLogo.png"
+      : "images/racingLogo.png";
+
+    // Update logo link and image
+    const logoLink = document.getElementById("logo-link");
+    const logoImage = document.getElementById("logo-image");
+    if (logoLink) logoLink.href = homePath;
+    if (logoImage) logoImage.src = imagePath;
+
+    // Update navigation links
+    const homeLink = document.getElementById("nav-home");
+    const squadLink = document.getElementById("nav-squad");
+    const historyLink = document.getElementById("nav-history");
+
+    if (homeLink) homeLink.href = homePath;
+    if (squadLink) squadLink.href = squadPath;
+    if (historyLink) historyLink.href = historyPath;
+  }
+
   // Header functionality
   document.addEventListener("DOMContentLoaded", function () {
+    // Set navigation paths first
+    setNavigationPaths();
+
     // Set active navigation based on current page
     const currentPage =
       window.location.pathname.split("/").pop() || "index.html";
