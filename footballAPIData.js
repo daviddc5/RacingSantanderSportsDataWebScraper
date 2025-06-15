@@ -8,27 +8,48 @@ class RacingFootballData {
       // Option 1: API-Football (Recommended - more comprehensive)
       apiFootball: {
         baseUrl: "https://api-football-v1.p.rapidapi.com/v3",
-        key: "YOUR_RAPIDAPI_KEY", // Get from https://rapidapi.com/api-sports/api/api-football/
-        teamId: 8696, // Racing Santander team ID
-        enabled: true,
-      },
-      // Option 2: Football-Data.org (Free tier available)
-      footballData: {
-        baseUrl: "https://api.football-data.org/v4",
-        key: "YOUR_FOOTBALL_DATA_KEY", // Get from https://www.football-data.org/
-        teamId: 8696, // Racing Santander team ID
-        enabled: false,
+        key: "bb04a7cf87msh24ec0f87ca2b2b7p19743fjsn26ab96dbe21e",
+        teamId: 8696, // This will be updated after we find the correct ID
+        enabled: true, // Enable since we have a valid API key
       },
     };
 
     this.currentAPI = "apiFootball"; // Default API to use
     this.fallbackData = this.getFallbackData();
+    this.teamIdInitialized = false; // Flag to track if team ID has been set
+
+    // Log API status
+    console.log("Football API Status:", {
+      apiFootball: this.apiConfig.apiFootball.enabled
+        ? "Enabled"
+        : "Disabled (no API key)",
+    });
+  }
+
+  // Ensure team ID is initialized before making API calls
+  async ensureTeamIdInitialized() {
+    if (!this.teamIdInitialized) {
+      console.log("Initializing team ID...");
+      try {
+        await this.testAPIConnection();
+        this.teamIdInitialized = true;
+        console.log("Team ID initialized:", this.apiConfig.apiFootball.teamId);
+      } catch (error) {
+        console.warn("Failed to initialize team ID, using fallback:", error);
+        this.teamIdInitialized = true; // Mark as initialized to prevent infinite retries
+      }
+    }
   }
 
   // Get squad data from API
   async getSquadData() {
     try {
       if (this.apiConfig[this.currentAPI].enabled) {
+        console.log("API is enabled, attempting to fetch squad data...");
+
+        // Ensure team ID is initialized first
+        await this.ensureTeamIdInitialized();
+
         const data = await this.fetchSquadFromAPI();
         if (data && data.length > 0) {
           const formattedData = this.formatSquadData(data);
@@ -51,6 +72,9 @@ class RacingFootballData {
   async getUpcomingFixtures(limit = 5) {
     try {
       if (this.apiConfig[this.currentAPI].enabled) {
+        // Ensure team ID is initialized first
+        await this.ensureTeamIdInitialized();
+
         const data = await this.fetchFixturesFromAPI(limit);
         if (data && data.length > 0) {
           const formattedData = this.formatFixturesData(data);
@@ -74,11 +98,13 @@ class RacingFootballData {
     try {
       if (this.apiConfig[this.currentAPI].enabled) {
         const data = await this.fetchLeaguePositionFromAPI();
-        if (data) {
+        if (data && data.length > 0) {
           const formattedData = this.formatLeaguePositionData(data);
-          // Mark as live API data
-          formattedData.isLiveData = true;
-          return formattedData;
+          if (formattedData) {
+            // Mark as live API data
+            formattedData.isLiveData = true;
+            return formattedData;
+          }
         }
       }
     } catch (error) {
@@ -97,58 +123,143 @@ class RacingFootballData {
   // API-Football squad fetch
   async fetchSquadFromAPI() {
     const config = this.apiConfig.apiFootball;
-    const response = await fetch(
-      `${config.baseUrl}/players/squad?team=${config.teamId}`,
-      {
-        headers: {
-          "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
-          "x-rapidapi-key": config.key,
-        },
-      }
+    console.log("Attempting to fetch squad data from API-Football...");
+    console.log(
+      "API URL:",
+      `${config.baseUrl}/players?team=${config.teamId}&season=2024`
     );
+    console.log("API Key:", config.key.substring(0, 10) + "...");
 
-    if (!response.ok) throw new Error(`API-Football error: ${response.status}`);
+    try {
+      const response = await fetch(
+        `${config.baseUrl}/players?team=${config.teamId}&season=2024`,
+        {
+          headers: {
+            "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+            "x-rapidapi-key": config.key,
+          },
+        }
+      );
 
-    const data = await response.json();
-    return data.response?.[0]?.players || [];
+      console.log("API Response status:", response.status);
+      console.log("API Response headers:", response.headers);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error response:", errorText);
+        throw new Error(
+          `API-Football error: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      console.log("API Response data:", data);
+
+      if (data.response && data.response.length > 0) {
+        console.log("Squad data found:", data.response.length, "players");
+        return data.response;
+      } else {
+        console.warn("No squad data in API response");
+        return [];
+      }
+    } catch (error) {
+      console.error("API fetch error:", error);
+      throw error;
+    }
   }
 
   // API-Football fixtures fetch
   async fetchFixturesFromAPI(limit) {
     const config = this.apiConfig.apiFootball;
-    const response = await fetch(
-      `${config.baseUrl}/fixtures?team=${config.teamId}&next=${limit}`,
-      {
-        headers: {
-          "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
-          "x-rapidapi-key": config.key,
-        },
-      }
+    console.log("Attempting to fetch fixtures data from API-Football...");
+    console.log(
+      "API URL:",
+      `${config.baseUrl}/fixtures?team=${config.teamId}&season=2024&next=${limit}`
     );
 
-    if (!response.ok) throw new Error(`API-Football error: ${response.status}`);
+    try {
+      const response = await fetch(
+        `${config.baseUrl}/fixtures?team=${config.teamId}&season=2024&next=${limit}`,
+        {
+          headers: {
+            "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+            "x-rapidapi-key": config.key,
+          },
+        }
+      );
 
-    const data = await response.json();
-    return data.response || [];
+      console.log("Fixtures API Response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Fixtures API Error response:", errorText);
+        throw new Error(
+          `API-Football error: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      console.log("Fixtures API Response data:", data);
+
+      if (data.response && data.response.length > 0) {
+        console.log("Fixtures data found:", data.response.length, "fixtures");
+        return data.response;
+      } else {
+        console.warn("No fixtures data in API response");
+        return [];
+      }
+    } catch (error) {
+      console.error("Fixtures API fetch error:", error);
+      throw error;
+    }
   }
 
   // API-Football league position fetch
   async fetchLeaguePositionFromAPI() {
     const config = this.apiConfig.apiFootball;
-    const response = await fetch(
-      `${config.baseUrl}/standings?league=140&season=2024&team=${config.teamId}`,
-      {
-        headers: {
-          "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
-          "x-rapidapi-key": config.key,
-        },
-      }
+    console.log(
+      "Attempting to fetch league position data from API-Football..."
+    );
+    console.log(
+      "API URL:",
+      `${config.baseUrl}/standings?league=140&season=2024`
     );
 
-    if (!response.ok) throw new Error(`API-Football error: ${response.status}`);
+    try {
+      const response = await fetch(
+        `${config.baseUrl}/standings?league=140&season=2024`,
+        {
+          headers: {
+            "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+            "x-rapidapi-key": config.key,
+          },
+        }
+      );
 
-    const data = await response.json();
-    return data.response?.[0]?.league?.standings?.[0] || [];
+      console.log("League Position API Response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("League Position API Error response:", errorText);
+        throw new Error(
+          `API-Football error: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      console.log("League Position API Response data:", data);
+
+      if (data.response && data.response.length > 0) {
+        console.log("League position data found");
+        return data.response[0].league.standings[0];
+      } else {
+        console.warn("No league position data in API response");
+        return [];
+      }
+    } catch (error) {
+      console.error("League Position API fetch error:", error);
+      throw error;
+    }
   }
 
   // Format squad data for display
@@ -156,7 +267,8 @@ class RacingFootballData {
     return players.map((player) => ({
       id: player.player.id,
       name: player.player.name,
-      number: player.player.number || "?",
+      number:
+        player.statistics?.[0]?.games?.number || player.player.number || "?",
       position: this.mapPosition(
         player.statistics?.[0]?.games?.position || player.player.type
       ),
@@ -183,10 +295,33 @@ class RacingFootballData {
 
   // Format league position data
   formatLeaguePositionData(standings) {
-    const racingPosition = standings.find(
-      (team) => team.team.id === this.apiConfig.apiFootball.teamId
+    console.log(
+      "Formatting league position data, looking for Racing Santander..."
     );
-    if (!racingPosition) return null;
+    console.log(
+      "Available teams in standings:",
+      standings.map((team) => `${team.team.name} (ID: ${team.team.id})`)
+    );
+
+    // Try to find Racing Santander by name (since we might not have the exact ID yet)
+    const racingPosition = standings.find(
+      (team) =>
+        team.team.id === this.apiConfig.apiFootball.teamId ||
+        (team.team.name.toLowerCase().includes("racing") &&
+          team.team.name.toLowerCase().includes("santander"))
+    );
+
+    if (!racingPosition) {
+      console.warn("Racing Santander not found in standings");
+      return null;
+    }
+
+    console.log(
+      "Found Racing Santander in standings:",
+      racingPosition.team.name,
+      "Position:",
+      racingPosition.rank
+    );
 
     return {
       position: racingPosition.rank,
@@ -479,6 +614,71 @@ class RacingFootballData {
         goalDifference: 3,
       },
     };
+  }
+
+  // Test API connection with a simple call
+  async testAPIConnection() {
+    const config = this.apiConfig.apiFootball;
+    console.log("Testing API connection...");
+
+    try {
+      // First, let's search for Racing Santander
+      const searchResponse = await fetch(
+        `${config.baseUrl}/teams?search=Racing%20Santander`,
+        {
+          headers: {
+            "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+            "x-rapidapi-key": config.key,
+          },
+        }
+      );
+
+      console.log("Search API Response status:", searchResponse.status);
+
+      if (!searchResponse.ok) {
+        const errorText = await searchResponse.text();
+        console.error("Search API Error response:", errorText);
+        throw new Error(
+          `Search API error: ${searchResponse.status} - ${errorText}`
+        );
+      }
+
+      const searchData = await searchResponse.json();
+      console.log("Search API Response data:", searchData);
+
+      if (searchData.response && searchData.response.length > 0) {
+        // Find Racing Santander in the results
+        const racingTeam = searchData.response.find(
+          (team) =>
+            team.team.name.toLowerCase().includes("racing") &&
+            team.team.name.toLowerCase().includes("santander")
+        );
+
+        if (racingTeam) {
+          console.log(
+            "Racing Santander found:",
+            racingTeam.team.name,
+            "ID:",
+            racingTeam.team.id
+          );
+          // Update the team ID
+          this.apiConfig.apiFootball.teamId = racingTeam.team.id;
+          return racingTeam;
+        } else {
+          console.log(
+            "Available teams:",
+            searchData.response.map((t) => `${t.team.name} (ID: ${t.team.id})`)
+          );
+          throw new Error("Racing Santander not found in search results");
+        }
+      } else {
+        console.warn("No teams found in search");
+        throw new Error("No teams found");
+      }
+    } catch (error) {
+      console.error("Test API fetch error:", error);
+      throw error;
+    }
   }
 }
 

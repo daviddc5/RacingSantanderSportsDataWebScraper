@@ -63,7 +63,16 @@
 
       // Load data when page loads
       document.addEventListener("DOMContentLoaded", function () {
-        loadMatchData();
+        console.log("DOM loaded, checking racingAPI availability...");
+        console.log("racingAPI available:", typeof racingAPI !== "undefined");
+        if (typeof racingAPI !== "undefined") {
+          console.log("racingAPI object:", racingAPI);
+          loadMatchData();
+        } else {
+          console.error(
+            "racingAPI is not defined! Check if footballAPIData.js loaded correctly."
+          );
+        }
       });
 
       async function loadMatchData() {

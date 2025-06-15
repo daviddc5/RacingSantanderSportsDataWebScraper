@@ -18,14 +18,23 @@ class ComponentLoader {
   // Load a component from file
   async loadComponent(componentName, targetElement) {
     try {
-      const response = await fetch(
-        `${this.basePath}components/${componentName}.html`
-      );
+      const componentPath = `${this.basePath}components/${componentName}.html`;
+      console.log(`Attempting to load component: ${componentPath}`);
+
+      const response = await fetch(componentPath);
+      console.log(`Response status: ${response.status} for ${componentPath}`);
+
       if (!response.ok) {
-        throw new Error(`Failed to load ${componentName} component`);
+        throw new Error(
+          `Failed to load ${componentName} component: ${response.status}`
+        );
       }
 
       const html = await response.text();
+      console.log(
+        `Successfully loaded ${componentName} component, length: ${html.length}`
+      );
+
       targetElement.innerHTML = html;
 
       // Execute any scripts in the component
@@ -39,6 +48,8 @@ class ComponentLoader {
       console.log(`${componentName} component loaded successfully`);
     } catch (error) {
       console.error(`Error loading ${componentName} component:`, error);
+      console.log(`Using fallback content for ${componentName}`);
+
       // Fallback content
       if (componentName === "header") {
         targetElement.innerHTML = this.getHeaderFallback();
