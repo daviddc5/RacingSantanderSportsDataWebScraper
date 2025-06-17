@@ -61,17 +61,36 @@
   // Set correct paths based on current page location
   function setFooterPaths() {
     const currentPath = window.location.pathname;
+    const pathSegments = currentPath
+      .split("/")
+      .filter((segment) => segment !== "");
+
+    // Check if we're in a subdirectory (like /pages/ or /repo-name/pages/)
+    const isInSubdirectory = pathSegments.length > 1;
     const isInPagesFolder = currentPath.includes("/pages/");
 
-    // Always use relative paths for GitHub Pages
-    const homePath = isInPagesFolder ? "../index.html" : "./index.html";
-    const squadPath = isInPagesFolder ? "./squad.html" : "./pages/squad.html";
-    const historyPath = isInPagesFolder
-      ? "./history.html"
-      : "./pages/history.html";
-    const imagePath = isInPagesFolder
-      ? "../images/racingLogo.png"
-      : "./images/racingLogo.png";
+    // Determine base paths for GitHub Pages
+    let homePath, squadPath, historyPath, imagePath;
+
+    if (isInPagesFolder) {
+      // We're in /pages/ subdirectory
+      homePath = "../index.html";
+      squadPath = "./squad.html";
+      historyPath = "./history.html";
+      imagePath = "../images/racingLogo.png";
+    } else if (isInSubdirectory) {
+      // We're in a GitHub Pages subdirectory (like /repo-name/)
+      homePath = "./index.html";
+      squadPath = "./pages/squad.html";
+      historyPath = "./pages/history.html";
+      imagePath = "./images/racingLogo.png";
+    } else {
+      // We're at the root
+      homePath = "./index.html";
+      squadPath = "./pages/squad.html";
+      historyPath = "./pages/history.html";
+      imagePath = "./images/racingLogo.png";
+    }
 
     // Update footer logo
     const footerLogo = document.getElementById("footer-logo");
