@@ -8,24 +8,11 @@ class ComponentLoader {
   // Detect the base path for components based on current page location
   getBasePath() {
     const currentPath = window.location.pathname;
-    const pathSegments = currentPath
-      .split("/")
-      .filter((segment) => segment !== "");
-
-    // Check if we're in a subdirectory (like /pages/ or /repo-name/pages/)
-    const isInSubdirectory = pathSegments.length > 1;
-    const isInPagesFolder = currentPath.includes("/pages/");
-
-    if (isInPagesFolder) {
-      // We're in /pages/ subdirectory
+    // If we're in the pages folder, go up one level
+    if (currentPath.includes("/pages/")) {
       return "../";
-    } else if (isInSubdirectory) {
-      // We're in a GitHub Pages subdirectory (like /repo-name/)
-      return "./";
-    } else {
-      // We're at the root
-      return "./";
     }
+    return "./";
   }
 
   // Load a component from file
