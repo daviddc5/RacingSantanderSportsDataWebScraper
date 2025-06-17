@@ -8,7 +8,7 @@ class RacingFootballData {
       // Option 1: API-Football (Recommended - more comprehensive)
       apiFootball: {
         baseUrl: "https://api-football-v1.p.rapidapi.com/v3",
-        // key: "API_KEY_HERE"
+        key: "bb04a7cf87msh24ec0f87ca2b2b7p19743fjsn26ab96dbe21e",
         teamId: 4465, // This will be updated after we find the correct ID
         enabled: true, // Enable since we have a valid API key
       },
@@ -222,12 +222,12 @@ class RacingFootballData {
     );
     console.log(
       "API URL:",
-      `${config.baseUrl}/standings?league=140&season=2024`
+      `${config.baseUrl}/standings?league=141&season=2024`
     );
 
     try {
       const response = await fetch(
-        `${config.baseUrl}/standings?league=140&season=2024`,
+        `${config.baseUrl}/standings?league=141&season=2024`,
         {
           headers: {
             "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
@@ -657,6 +657,7 @@ class RacingFootballData {
         if (racingTeam) {
           console.log(
             "Racing Santander found:",
+            racingTeam,
             racingTeam.team.name,
             "ID:",
             racingTeam.team.id
