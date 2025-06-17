@@ -3,7 +3,7 @@ import { useFootballData } from "../hooks/useFootballData";
 import "./Home.css";
 
 const Home = () => {
-  const { getPastFixtures, getLeaguePosition, loading, error } =
+  const { getPastFixtures, getLeaguePosition, loading, error, dataStatus } =
     useFootballData();
   const [pastFixturesData, setPastFixturesData] = useState([]);
   const [leaguePositionData, setLeaguePositionData] = useState(null);
@@ -30,6 +30,25 @@ const Home = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const renderDataStatus = () => {
+    if (!dataStatus) return null;
+
+    return (
+      <div className={`data-status ${dataStatus.isLive ? "live" : "fallback"}`}>
+        <div className="status-icon">{dataStatus.isLive ? "✓" : "⚠"}</div>
+        <div className="status-content">
+          <div className="status-message">{dataStatus.message}</div>
+          <div className="status-source">Source: {dataStatus.source}</div>
+          {dataStatus.lastUpdated && (
+            <div className="status-time">
+              Last updated: {new Date(dataStatus.lastUpdated).toLocaleString()}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const renderLeaguePosition = (data) => {
@@ -176,6 +195,9 @@ const Home = () => {
       {/* Football data sections */}
       <section className="api-data-section">
         <div className="container">
+          {/* Data Status */}
+          {renderDataStatus()}
+
           {/* League Position */}
           {leaguePositionData && (
             <div>

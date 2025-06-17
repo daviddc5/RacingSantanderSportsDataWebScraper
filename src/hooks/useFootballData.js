@@ -1,17 +1,69 @@
 import { useState, useEffect } from "react";
+import FBrefScraper from "../services/fbrefScraper";
 
-// Racing Santander Football Data - Static Implementation
-// No API dependencies, uses static data from FBref
+// Racing Santander Football Data - Live + Fallback Implementation
+// Uses FBref web scraping with fallback to static data
 
 class RacingFootballData {
   constructor() {
-    this.data = this.getStaticData();
-    console.log("Football Data Status: Using static data from FBref");
+    this.scraper = new FBrefScraper();
+    this.staticData = this.getStaticData();
+    this.liveData = null;
+    this.lastFetchAttempt = null;
+    this.fetchInterval = 30 * 60 * 1000; // 30 minutes
   }
 
-  // Get squad data
+  // Initialize live data fetching
+  async initialize() {
+    try {
+      console.log("Initializing live data fetch from FBref...");
+      this.liveData = await this.scraper.fetchLiveData();
+      this.lastFetchAttempt = Date.now();
+      console.log("Live data initialized successfully");
+    } catch (error) {
+      console.warn("Failed to initialize live data, using static data:", error);
+      this.liveData = null;
+    }
+  }
+
+  // Check if we should attempt to refresh live data
+  shouldRefreshLiveData() {
+    if (!this.lastFetchAttempt) return true;
+    return Date.now() - this.lastFetchAttempt > this.fetchInterval;
+  }
+
+  // Get squad data (live or fallback)
   async getSquadData() {
-    return this.data.squad;
+    // Try to refresh live data if needed
+    if (this.shouldRefreshLiveData()) {
+      try {
+        this.liveData = await this.scraper.fetchLiveData();
+        this.lastFetchAttempt = Date.now();
+      } catch (error) {
+        console.warn("Failed to refresh live data:", error);
+      }
+    }
+
+    if (
+      this.liveData &&
+      this.liveData.squad &&
+      this.liveData.squad.length > 0
+    ) {
+      return {
+        ...this.liveData.squad,
+        isLiveData: true,
+        lastUpdated: this.liveData.lastUpdated,
+        source: this.liveData.source,
+      };
+    }
+
+    // Return fallback data
+    return {
+      ...this.staticData.squad,
+      isLiveData: false,
+      lastUpdated: null,
+      source: "FBref.com (fallback)",
+    };
   }
 
   // Get upcoming fixtures (returns empty array as requested)
@@ -19,14 +71,91 @@ class RacingFootballData {
     return [];
   }
 
-  // Get past fixtures with results
+  // Get past fixtures with results (live or fallback)
   async getPastFixtures(limit = 3) {
-    return this.data.pastFixtures.slice(0, limit);
+    // Try to refresh live data if needed
+    if (this.shouldRefreshLiveData()) {
+      try {
+        this.liveData = await this.scraper.fetchLiveData();
+        this.lastFetchAttempt = Date.now();
+      } catch (error) {
+        console.warn("Failed to refresh live data:", error);
+      }
+    }
+
+    if (
+      this.liveData &&
+      this.liveData.pastFixtures &&
+      this.liveData.pastFixtures.length > 0
+    ) {
+      const fixtures = this.liveData.pastFixtures.slice(0, limit);
+      return {
+        ...fixtures,
+        isLiveData: true,
+        lastUpdated: this.liveData.lastUpdated,
+        source: this.liveData.source,
+      };
+    }
+
+    // Return fallback data
+    const fallbackFixtures = this.staticData.pastFixtures.slice(0, limit);
+    return {
+      ...fallbackFixtures,
+      isLiveData: false,
+      lastUpdated: null,
+      source: "FBref.com (fallback)",
+    };
   }
 
-  // Get league position
+  // Get league position (live or fallback)
   async getLeaguePosition() {
-    return this.data.leaguePosition;
+    // Try to refresh live data if needed
+    if (this.shouldRefreshLiveData()) {
+      try {
+        this.liveData = await this.scraper.fetchLiveData();
+        this.lastFetchAttempt = Date.now();
+      } catch (error) {
+        console.warn("Failed to refresh live data:", error);
+      }
+    }
+
+    if (this.liveData && this.liveData.leaguePosition) {
+      return {
+        ...this.liveData.leaguePosition,
+        isLiveData: true,
+        lastUpdated: this.liveData.lastUpdated,
+        source: this.liveData.source,
+      };
+    }
+
+    // Return fallback data
+    return {
+      ...this.staticData.leaguePosition,
+      isLiveData: false,
+      lastUpdated: null,
+      source: "FBref.com (fallback)",
+    };
+  }
+
+  // Get data status information
+  getDataStatus() {
+    if (this.liveData) {
+      return {
+        isLive: true,
+        lastUpdated: this.liveData.lastUpdated,
+        source: this.liveData.source,
+        message: `Data is up to date as of ${new Date(
+          this.liveData.lastUpdated
+        ).toLocaleString()}`,
+      };
+    } else {
+      return {
+        isLive: false,
+        lastUpdated: null,
+        source: "FBref.com (fallback)",
+        message: "Using fallback data - live data unavailable",
+      };
+    }
   }
 
   // Get static data with real Racing Santander information from FBref (2024-2025 season)
@@ -201,6 +330,22 @@ export const useFootballData = () => {
   const [api] = useState(() => new RacingFootballData());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [dataStatus, setDataStatus] = useState(null);
+
+  // Initialize the data service
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        await api.initialize();
+        setDataStatus(api.getDataStatus());
+      } catch (error) {
+        console.error("Error initializing data service:", error);
+        setDataStatus(api.getDataStatus());
+      }
+    };
+
+    initializeData();
+  }, [api]);
 
   const fetchData = async (method, ...args) => {
     setLoading(true);
@@ -208,6 +353,7 @@ export const useFootballData = () => {
 
     try {
       const result = await api[method](...args);
+      setDataStatus(api.getDataStatus());
       return result;
     } catch (err) {
       setError(err.message);
@@ -221,6 +367,7 @@ export const useFootballData = () => {
     api,
     loading,
     error,
+    dataStatus,
     getSquadData: () => fetchData("getSquadData"),
     getUpcomingFixtures: (limit) => fetchData("getUpcomingFixtures", limit),
     getPastFixtures: (limit) => fetchData("getPastFixtures", limit),

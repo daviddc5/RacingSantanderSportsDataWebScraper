@@ -3,7 +3,7 @@ import { useFootballData } from "../hooks/useFootballData";
 import "./Squad.css";
 
 const Squad = () => {
-  const { getSquadData, loading, error } = useFootballData();
+  const { getSquadData, loading, error, dataStatus } = useFootballData();
   const [squadData, setSquadData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,6 +22,25 @@ const Squad = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const renderDataStatus = () => {
+    if (!dataStatus) return null;
+
+    return (
+      <div className={`data-status ${dataStatus.isLive ? "live" : "fallback"}`}>
+        <div className="status-icon">{dataStatus.isLive ? "✓" : "⚠"}</div>
+        <div className="status-content">
+          <div className="status-message">{dataStatus.message}</div>
+          <div className="status-source">Source: {dataStatus.source}</div>
+          {dataStatus.lastUpdated && (
+            <div className="status-time">
+              Last updated: {new Date(dataStatus.lastUpdated).toLocaleString()}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const groupPlayersByPosition = (players) => {
@@ -91,6 +110,13 @@ const Squad = () => {
           <div className="player-details">
             <div>Age: {player.age}</div>
             <div className="player-nationality">{player.nationality}</div>
+            {player.matches && <div>Matches: {player.matches}</div>}
+            {player.goals && player.goals > 0 && (
+              <div>Goals: {player.goals}</div>
+            )}
+            {player.assists && player.assists > 0 && (
+              <div>Assists: {player.assists}</div>
+            )}
           </div>
         </div>
       </div>
@@ -106,6 +132,9 @@ const Squad = () => {
           <h2>First Team Squad</h2>
           <p>Meet the players who represent Racing de Santander</p>
         </div>
+
+        {/* Data Status */}
+        {renderDataStatus()}
 
         {isLoading ? (
           <div className="loading-container">
