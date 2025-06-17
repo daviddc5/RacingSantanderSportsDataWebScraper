@@ -8,7 +8,7 @@ class RacingFootballData {
       // Option 1: API-Football (Recommended - more comprehensive)
       apiFootball: {
         baseUrl: "https://api-football-v1.p.rapidapi.com/v3",
-
+        key: "ENV_API_KEY", // use ENV variable key to import here
         teamId: 4465, // This will be updated after we find the correct ID
         enabled: true, // Enable since we have a valid API key
       },
