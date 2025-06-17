@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useFootballAPI } from "../hooks/useFootballAPI";
+import { useFootballData } from "../hooks/useFootballData";
 import "./Squad.css";
 
 const Squad = () => {
-  const { getSquadData, loading, error } = useFootballAPI();
+  const { getSquadData, loading, error } = useFootballData();
   const [squadData, setSquadData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [apiStatus, setApiStatus] = useState({});
 
   useEffect(() => {
     loadSquadData();
@@ -18,13 +17,6 @@ const Squad = () => {
     try {
       const data = await getSquadData();
       setSquadData(data);
-
-      setApiStatus({
-        isLive: data.isLiveData,
-        message: data.isLiveData
-          ? "✓ Live squad data from API"
-          : "⚠ Using fallback squad data (API unavailable)",
-      });
     } catch (error) {
       console.error("Error loading squad data:", error);
     } finally {
@@ -114,14 +106,6 @@ const Squad = () => {
           <h2>First Team Squad</h2>
           <p>Meet the players who represent Racing de Santander</p>
         </div>
-
-        {apiStatus.message && (
-          <div
-            className={`api-status ${apiStatus.isLive ? "live" : "fallback"}`}
-          >
-            {apiStatus.message}
-          </div>
-        )}
 
         {isLoading ? (
           <div className="loading-container">

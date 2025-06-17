@@ -71,6 +71,56 @@
   color: var(--color-grey-dark);
 }
 
+.score-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.score {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--color-green);
+  min-width: 25px;
+  text-align: center;
+}
+
+.score-separator {
+  font-size: 1.5rem;
+  color: var(--color-grey-dark);
+  font-weight: bold;
+}
+
+.result-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.result-win {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.result-loss {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.result-draw {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
 .fixture-date {
   font-weight: bold;
   color: var(--color-green);
@@ -184,26 +234,6 @@
 .loading-text {
   color: var(--color-grey-dark);
   font-size: 1rem;
-}
-
-.api-status {
-  text-align: center;
-  margin-bottom: 20px;
-  padding: 10px;
-  border-radius: 5px;
-  font-size: 0.9rem;
-}
-
-.api-status.live {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.api-status.fallback {
-  background: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeaa7;
 }
 
 .error-container {

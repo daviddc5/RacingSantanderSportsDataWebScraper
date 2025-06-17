@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import { useFootballAPI } from "../hooks/useFootballAPI";
+import { useFootballData } from "../hooks/useFootballData";
 import "./Home.css";
 
 const Home = () => {
-  const { getUpcomingFixtures, getLeaguePosition, loading, error } =
-    useFootballAPI();
-  const [fixturesData, setFixturesData] = useState([]);
+  const { getPastFixtures, getLeaguePosition, loading, error } =
+    useFootballData();
+  const [pastFixturesData, setPastFixturesData] = useState([]);
   const [leaguePositionData, setLeaguePositionData] = useState(null);
-  const [apiStatus, setApiStatus] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -18,39 +17,14 @@ const Home = () => {
     setIsLoading(true);
 
     try {
-      // Load both fixtures and league position
-      const [fixtures, leaguePosition] = await Promise.all([
-        getUpcomingFixtures(5),
+      // Load both past fixtures and league position
+      const [pastFixtures, leaguePosition] = await Promise.all([
+        getPastFixtures(3),
         getLeaguePosition(),
       ]);
 
-      setFixturesData(fixtures);
+      setPastFixturesData(pastFixtures);
       setLeaguePositionData(leaguePosition);
-
-      // Show API status (overall, if either is live)
-      const isLiveData =
-        fixtures.isLiveData === true || leaguePosition.isLiveData === true;
-
-      setApiStatus({
-        overall: {
-          isLive: isLiveData,
-          message: isLiveData
-            ? "✓ Live data from API"
-            : "⚠ Using fallback data (API unavailable)",
-        },
-        fixtures: {
-          isLive: fixtures.isLiveData,
-          message: fixtures.isLiveData
-            ? "✓ Fixtures: Live data from API"
-            : "⚠ Fixtures: Using fallback data (API unavailable)",
-        },
-        leaguePosition: {
-          isLive: leaguePosition.isLiveData,
-          message: leaguePosition.isLiveData
-            ? "✓ League position: Live data from API"
-            : "⚠ League position: Using fallback data (API unavailable)",
-        },
-      });
     } catch (error) {
       console.error("Error loading match data:", error);
     } finally {
@@ -108,7 +82,7 @@ const Home = () => {
     );
   };
 
-  const renderFixtures = (fixtures) => {
+  const renderPastFixtures = (fixtures) => {
     return fixtures.map((fixture) => {
       const date = new Date(fixture.date);
       const formattedDate = date.toLocaleDateString("en-GB", {
@@ -116,10 +90,32 @@ const Home = () => {
         day: "numeric",
         month: "short",
       });
-      const formattedTime = date.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+
+      const getResultClass = (result) => {
+        switch (result) {
+          case "W":
+            return "result-win";
+          case "L":
+            return "result-loss";
+          case "D":
+            return "result-draw";
+          default:
+            return "";
+        }
+      };
+
+      const getResultText = (result) => {
+        switch (result) {
+          case "W":
+            return "WIN";
+          case "L":
+            return "LOSS";
+          case "D":
+            return "DRAW";
+          default:
+            return "";
+        }
+      };
 
       return (
         <div key={fixture.id} className="fixture-card">
@@ -138,9 +134,15 @@ const Home = () => {
           </div>
 
           <div className="fixture-details">
-            <div className="vs-text">VS</div>
+            <div className="score-display">
+              <span className="score">{fixture.homeScore}</span>
+              <span className="score-separator">-</span>
+              <span className="score">{fixture.awayScore}</span>
+            </div>
+            <div className={`result-badge ${getResultClass(fixture.result)}`}>
+              {getResultText(fixture.result)}
+            </div>
             <div className="fixture-date">{formattedDate}</div>
-            <div className="fixture-venue">{formattedTime}</div>
             <div className="fixture-competition">{fixture.competition}</div>
           </div>
 
@@ -171,51 +173,23 @@ const Home = () => {
         </div>
       </section>
 
-      {/* API-powered sections */}
+      {/* Football data sections */}
       <section className="api-data-section">
         <div className="container">
-          {apiStatus.overall && (
-            <div
-              className={`api-status ${
-                apiStatus.overall.isLive ? "live" : "fallback"
-              }`}
-            >
-              {apiStatus.overall.message}
-            </div>
-          )}
-
           {/* League Position */}
           {leaguePositionData && (
             <div>
               <h3>Current League Position</h3>
-              {apiStatus.leaguePosition && (
-                <div
-                  className={`api-status ${
-                    apiStatus.leaguePosition.isLive ? "live" : "fallback"
-                  }`}
-                >
-                  {apiStatus.leaguePosition.message}
-                </div>
-              )}
               {renderLeaguePosition(leaguePositionData)}
             </div>
           )}
 
-          {/* Upcoming Fixtures */}
-          {fixturesData.length > 0 && (
+          {/* Past Fixtures */}
+          {pastFixturesData.length > 0 && (
             <div>
-              <h3>Upcoming Fixtures</h3>
-              {apiStatus.fixtures && (
-                <div
-                  className={`api-status ${
-                    apiStatus.fixtures.isLive ? "live" : "fallback"
-                  }`}
-                >
-                  {apiStatus.fixtures.message}
-                </div>
-              )}
+              <h3>Recent Results</h3>
               <div className="fixtures-grid">
-                {renderFixtures(fixturesData)}
+                {renderPastFixtures(pastFixturesData)}
               </div>
             </div>
           )}
