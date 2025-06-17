@@ -1,0 +1,62 @@
+/* History Page Styles */
+
+.history-page {
+  padding: 40px 0;
+  background: var(--color-grey-light);
+}
+
+.history-page h2 {
+  text-align: center;
+  color: var(--color-green);
+  margin-bottom: 40px;
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.history-text h3 {
+  color: var(--color-green);
+  margin-bottom: 15px;
+}
+
+.history-text p {
+  color: var(--color-grey-dark);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.history-image img {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.history-image figcaption {
+  text-align: center;
+  color: var(--color-grey-medium);
+  font-style: italic;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .history-page {
+    padding: 20px 0;
+  }
+
+  .history-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .history-grid {
+    gap: 20px;
+  }
+}
