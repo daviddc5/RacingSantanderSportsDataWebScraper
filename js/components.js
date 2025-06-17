@@ -7,8 +7,12 @@ class ComponentLoader {
 
   // Detect the base path for components based on current page location
   getBasePath() {
-    // For Vercel, we'll use absolute paths from root
-    return "/";
+    const currentPath = window.location.pathname;
+    // If we're in the pages folder, go up one level
+    if (currentPath.includes("/pages/")) {
+      return "../";
+    }
+    return "./";
   }
 
   // Load a component from file
@@ -78,17 +82,27 @@ class ComponentLoader {
 
   // Fallback header content
   getHeaderFallback() {
+    const homePath = this.basePath === "../" ? "../index.html" : "./index.html";
+    const squadPath =
+      this.basePath === "../" ? "./squad.html" : "./pages/squad.html";
+    const historyPath =
+      this.basePath === "../" ? "./history.html" : "./pages/history.html";
+    const imagePath =
+      this.basePath === "../"
+        ? "../images/racingLogo.png"
+        : "./images/racingLogo.png";
+
     return `
       <header>
         <div class="header-container">
-          <a href="/" class="logo-link">
-            <img src="/images/racingLogo.png" alt="Racing de Santander Crest" class="logo">
+          <a href="${homePath}" class="logo-link">
+            <img src="${imagePath}" alt="Racing de Santander Crest" class="logo">
           </a>
           <nav class="main-nav">
             <ul>
-              <li><a href="/">HOME</a></li>
-              <li><a href="/squad">SQUAD</a></li>
-              <li><a href="/history">HISTORY</a></li>
+              <li><a href="${homePath}">HOME</a></li>
+              <li><a href="${squadPath}">SQUAD</a></li>
+              <li><a href="${historyPath}">HISTORY</a></li>
             </ul>
           </nav>
           <a href="https://entradas.realracingclub.es/" target="_blank" rel="noopener noreferrer" class="cta-button">BUY TICKETS</a>
@@ -99,19 +113,29 @@ class ComponentLoader {
 
   // Fallback footer content
   getFooterFallback() {
+    const homePath = this.basePath === "../" ? "../index.html" : "./index.html";
+    const squadPath =
+      this.basePath === "../" ? "./squad.html" : "./pages/squad.html";
+    const historyPath =
+      this.basePath === "../" ? "./history.html" : "./pages/history.html";
+    const imagePath =
+      this.basePath === "../"
+        ? "../images/racingLogo.png"
+        : "./images/racingLogo.png";
+
     return `
       <footer>
         <div class="footer-container">
           <div class="footer-column">
-            <img src="/images/racingLogo.png" alt="Racing de Santander Crest" class="logo-footer">
+            <img src="${imagePath}" alt="Racing de Santander Crest" class="logo-footer">
             <p>Founded in 1913. A historic club with a passionate heart. ¡Aúpa Racing!</p>
           </div>
           <div class="footer-column">
             <h4>NAVIGATION</h4>
             <ul>
-              <li><a href="/">Home</a></li>
-              <li><a href="/squad">Squad</a></li>
-              <li><a href="/history">History</a></li>
+              <li><a href="${homePath}">Home</a></li>
+              <li><a href="${squadPath}">Squad</a></li>
+              <li><a href="${historyPath}">History</a></li>
             </ul>
           </div>
           <div class="footer-column">
