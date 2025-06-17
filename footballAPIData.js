@@ -78,8 +78,11 @@ class RacingFootballData {
         const data = await this.fetchFixturesFromAPI(limit);
         if (data && data.length > 0) {
           const formattedData = this.formatFixturesData(data);
-          // Mark as live API data
-          formattedData.isLiveData = true;
+          // Mark as live API data (set property on array)
+          Object.defineProperty(formattedData, "isLiveData", {
+            value: true,
+            enumerable: false,
+          });
           return formattedData;
         }
       }
@@ -89,7 +92,10 @@ class RacingFootballData {
 
     // Return fallback data with flag
     const fallbackData = this.fallbackData.fixtures;
-    fallbackData.isLiveData = false;
+    Object.defineProperty(fallbackData, "isLiveData", {
+      value: false,
+      enumerable: false,
+    });
     return fallbackData;
   }
 

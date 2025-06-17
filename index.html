@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Racing Santander - Home</title>
+    <title>Racing de Santander - Home</title>
     <link rel="stylesheet" href="styles/styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,9 +12,8 @@
       rel="stylesheet"
     />
   </head>
-  <!-- header component Placeholder -->
-
   <body>
+    <!-- Header Component Placeholder -->
     <div id="header-placeholder"></div>
 
     <main>
@@ -25,6 +24,7 @@
         </div>
       </section>
 
+      <!-- API-powered sections -->
       <section class="api-data-section">
         <div class="container">
           <div id="apiStatus" class="api-status" style="display: none"></div>
@@ -32,12 +32,22 @@
           <!-- League Position -->
           <div id="leaguePositionContainer" style="display: none">
             <h3>Current League Position</h3>
+            <div
+              id="leaguePositionStatus"
+              class="api-status"
+              style="display: none"
+            ></div>
             <div id="leaguePositionContent"></div>
           </div>
 
           <!-- Upcoming Fixtures -->
           <div id="fixturesContainer" style="display: none">
             <h3>Upcoming Fixtures</h3>
+            <div
+              id="fixturesStatus"
+              class="api-status"
+              style="display: none"
+            ></div>
             <div id="fixturesContent" class="fixtures-grid"></div>
           </div>
 
@@ -48,9 +58,10 @@
           </div>
         </div>
       </section>
-
-      <div id="footer-placeholder"></div>
     </main>
+
+    <!-- Footer Component Placeholder -->
+    <div id="footer-placeholder"></div>
 
     <!-- Scripts -->
     <script src="js/components.js"></script>
@@ -81,12 +92,18 @@
           "leaguePositionContainer"
         );
         const fixturesContainer = document.getElementById("fixturesContainer");
+        const leaguePositionStatus = document.getElementById(
+          "leaguePositionStatus"
+        );
+        const fixturesStatus = document.getElementById("fixturesStatus");
 
         // Show loading state
         loadingContainer.style.display = "block";
         apiStatus.style.display = "none";
         leaguePositionContainer.style.display = "none";
         fixturesContainer.style.display = "none";
+        leaguePositionStatus.style.display = "none";
+        fixturesStatus.style.display = "none";
 
         try {
           // Load both fixtures and league position
@@ -98,13 +115,10 @@
           fixturesData = fixtures;
           leaguePositionData = leaguePosition;
 
-          // Check if we got real API data or fallback using the isLiveData flag
+          // Show API status (overall, if either is live)
           const isLiveData =
             fixtures.isLiveData === true || leaguePosition.isLiveData === true;
 
-          console.log(fixturesData);
-
-          // Show API status
           apiStatus.style.display = "block";
           if (isLiveData) {
             apiStatus.className = "api-status live";
@@ -114,15 +128,34 @@
             apiStatus.textContent = "⚠ Using fallback data (API unavailable)";
           }
 
-          // Render data
+          // Render data and show per-section status
           if (leaguePositionData) {
             renderLeaguePosition(leaguePositionData);
             leaguePositionContainer.style.display = "block";
+            leaguePositionStatus.style.display = "block";
+            if (leaguePositionData.isLiveData) {
+              leaguePositionStatus.className = "api-status live";
+              leaguePositionStatus.textContent =
+                "✓ League position: Live data from API";
+            } else {
+              leaguePositionStatus.className = "api-status fallback";
+              leaguePositionStatus.textContent =
+                "⚠ League position: Using fallback data (API unavailable)";
+            }
           }
 
           if (fixturesData.length > 0) {
             renderFixtures(fixturesData);
             fixturesContainer.style.display = "block";
+            fixturesStatus.style.display = "block";
+            if (fixturesData.isLiveData) {
+              fixturesStatus.className = "api-status live";
+              fixturesStatus.textContent = "✓ Fixtures: Live data from API";
+            } else {
+              fixturesStatus.className = "api-status fallback";
+              fixturesStatus.textContent =
+                "⚠ Fixtures: Using fallback data (API unavailable)";
+            }
           }
 
           // Hide loading
