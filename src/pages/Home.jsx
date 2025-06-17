@@ -92,6 +92,18 @@ const Home = () => {
             <div className="stat-label">Goal Diff</div>
           </div>
         </div>
+        <div className="data-source">
+          <small>
+            Data source:{" "}
+            <a
+              href="https://fbref.com/en/squads/dee3bbc8/Racing-Santander-Stats"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              FBref.com
+            </a>
+          </small>
+        </div>
       </div>
     );
   };

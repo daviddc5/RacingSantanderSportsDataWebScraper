@@ -137,17 +137,34 @@ const Squad = () => {
             </button>
           </div>
         ) : (
-          Object.entries(groupedPlayers).map(
-            ([position, players]) =>
-              players.length > 0 && (
-                <div key={position} className="position-section">
-                  <h3 className="position-title">{position}s</h3>
-                  <div className="player-grid">
-                    {players.map(renderPlayerCard)}
+          <>
+            {Object.entries(groupedPlayers).map(
+              ([position, players]) =>
+                players.length > 0 && (
+                  <div key={position} className="position-section">
+                    <h3 className="position-title">{position}s</h3>
+                    <div className="player-grid">
+                      {players.map(renderPlayerCard)}
+                    </div>
                   </div>
-                </div>
-              )
-          )
+                )
+            )}
+            <div className="data-source-note">
+              <p>
+                <small>
+                  Data source:{" "}
+                  <a
+                    href="https://fbref.com/en/squads/dee3bbc8/Racing-Santander-Stats"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    FBref.com
+                  </a>{" "}
+                  - 2024-2025 Segunda División season
+                </small>
+              </p>
+            </div>
+          </>
         )}
       </div>
     </div>
