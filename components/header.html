@@ -36,13 +36,15 @@
     const currentPath = window.location.pathname;
     const isInPagesFolder = currentPath.includes("/pages/");
 
-    // Set base paths
-    const homePath = isInPagesFolder ? "../index.html" : "index.html";
-    const squadPath = isInPagesFolder ? "squad.html" : "pages/squad.html";
-    const historyPath = isInPagesFolder ? "history.html" : "pages/history.html";
+    // Always use relative paths for GitHub Pages
+    const homePath = isInPagesFolder ? "../index.html" : "./index.html";
+    const squadPath = isInPagesFolder ? "./squad.html" : "./pages/squad.html";
+    const historyPath = isInPagesFolder
+      ? "./history.html"
+      : "./pages/history.html";
     const imagePath = isInPagesFolder
       ? "../images/racingLogo.png"
-      : "images/racingLogo.png";
+      : "./images/racingLogo.png";
 
     // Update logo link and image
     const logoLink = document.getElementById("logo-link");

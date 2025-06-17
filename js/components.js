@@ -82,15 +82,15 @@ class ComponentLoader {
 
   // Fallback header content
   getHeaderFallback() {
-    const homePath = this.basePath === "../" ? "../index.html" : "index.html";
+    const homePath = this.basePath === "../" ? "../index.html" : "./index.html";
     const squadPath =
-      this.basePath === "../" ? "squad.html" : "pages/squad.html";
+      this.basePath === "../" ? "./squad.html" : "./pages/squad.html";
     const historyPath =
-      this.basePath === "../" ? "history.html" : "pages/history.html";
+      this.basePath === "../" ? "./history.html" : "./pages/history.html";
     const imagePath =
       this.basePath === "../"
         ? "../images/racingLogo.png"
-        : "images/racingLogo.png";
+        : "./images/racingLogo.png";
 
     return `
       <header>
@@ -113,15 +113,15 @@ class ComponentLoader {
 
   // Fallback footer content
   getFooterFallback() {
-    const homePath = this.basePath === "../" ? "../index.html" : "index.html";
+    const homePath = this.basePath === "../" ? "../index.html" : "./index.html";
     const squadPath =
-      this.basePath === "../" ? "squad.html" : "pages/squad.html";
+      this.basePath === "../" ? "./squad.html" : "./pages/squad.html";
     const historyPath =
-      this.basePath === "../" ? "history.html" : "pages/history.html";
+      this.basePath === "../" ? "./history.html" : "./pages/history.html";
     const imagePath =
       this.basePath === "../"
         ? "../images/racingLogo.png"
-        : "images/racingLogo.png";
+        : "./images/racingLogo.png";
 
     return `
       <footer>
