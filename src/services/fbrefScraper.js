@@ -19,9 +19,9 @@ class FBrefScraper {
   // Fetch data from FBref
   async fetchLiveData() {
     try {
-      // Check cache first
+      // Check if we have valid cached data
       if (this.isCacheValid()) {
-        console.log("Using cached FBref data");
+        console.log("Using cached data from FBref");
         return {
           ...this.cache,
           isLive: true,
@@ -32,23 +32,56 @@ class FBrefScraper {
 
       console.log("Fetching fresh data from FBref...");
 
-      // Use a CORS proxy to bypass CORS restrictions
-      const proxyUrl = "https://api.allorigins.win/raw?url=";
-      const targetUrl = encodeURIComponent(this.baseUrl);
+      // Try multiple CORS proxies in case one fails
+      const proxies = [
+        "https://api.allorigins.win/raw?url=",
+        "https://cors-anywhere.herokuapp.com/",
+        "https://thingproxy.freeboard.io/fetch/",
+      ];
 
-      const response = await fetch(proxyUrl + targetUrl, {
-        method: "GET",
-        headers: {
-          Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.5",
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        },
-      });
+      let response = null;
+      let lastError = null;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      for (const proxy of proxies) {
+        try {
+          const targetUrl =
+            proxy === "https://cors-anywhere.herokuapp.com/"
+              ? this.baseUrl
+              : encodeURIComponent(this.baseUrl);
+
+          const fullUrl = proxy + targetUrl;
+
+          console.log(`Trying proxy: ${proxy}`);
+
+          response = await fetch(fullUrl, {
+            method: "GET",
+            headers: {
+              Accept:
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+              "Accept-Language": "en-US,en;q=0.5",
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            },
+            timeout: 10000, // 10 second timeout
+          });
+
+          if (response.ok) {
+            console.log(`Successfully fetched data using proxy: ${proxy}`);
+            break;
+          } else {
+            console.warn(`Proxy ${proxy} returned status: ${response.status}`);
+            lastError = new Error(`HTTP error! status: ${response.status}`);
+          }
+        } catch (error) {
+          console.warn(`Proxy ${proxy} failed:`, error.message);
+          lastError = error;
+          continue;
+        }
+      }
+
+      if (!response || !response.ok) {
+        console.warn("All proxies failed, using fallback data");
+        return this.getFallbackData();
       }
 
       const html = await response.text();
@@ -70,7 +103,8 @@ class FBrefScraper {
       };
     } catch (error) {
       console.error("Error fetching live data from FBref:", error);
-      throw error;
+      console.warn("Using fallback data due to network error");
+      return this.getFallbackData();
     }
   }
 
@@ -342,6 +376,175 @@ class FBrefScraper {
       // Fallback to current date
       return new Date().toISOString();
     }
+  }
+
+  // Get fallback data when network requests fail
+  getFallbackData() {
+    return {
+      squad: [
+        {
+          id: 1,
+          name: "Jokin Ezkieta",
+          position: "Goalkeeper",
+          age: 28,
+          nationality: "Spain",
+          photo: "/images/players/ezkieta.jpg",
+          number: "1",
+        },
+        {
+          id: 2,
+          name: "Andrés Martín",
+          position: "Midfielder",
+          age: 25,
+          nationality: "Spain",
+          photo: "/images/players/martin.jpg",
+          number: "10",
+        },
+        {
+          id: 3,
+          name: "Iñigo Vicente",
+          position: "Midfielder",
+          age: 27,
+          nationality: "Spain",
+          photo: "/images/players/vicente.jpg",
+          number: "11",
+        },
+        {
+          id: 4,
+          name: "Aldasoro",
+          position: "Midfielder",
+          age: 26,
+          nationality: "Spain",
+          photo: "/images/players/aldasoro.jpg",
+          number: "8",
+        },
+        {
+          id: 5,
+          name: "Unai Vencedor Paris",
+          position: "Midfielder",
+          age: 24,
+          nationality: "Spain",
+          photo: "/images/players/vencedor.jpg",
+          number: "6",
+        },
+        {
+          id: 6,
+          name: "Javier Castro",
+          position: "Defender",
+          age: 24,
+          nationality: "Spain",
+          photo: "/images/players/castro.jpg",
+          number: "3",
+        },
+        {
+          id: 7,
+          name: "Pablo Rodríguez",
+          position: "Midfielder",
+          age: 23,
+          nationality: "Spain",
+          photo: "/images/players/rodriguez.jpg",
+          number: "7",
+        },
+        {
+          id: 8,
+          name: "Sory Kaba",
+          position: "Forward",
+          age: 28,
+          nationality: "Guinea",
+          photo: "/images/players/kaba.jpg",
+          number: "9",
+        },
+        {
+          id: 9,
+          name: "Jorge Pombo",
+          position: "Forward",
+          age: 30,
+          nationality: "Spain",
+          photo: "/images/players/pombo.jpg",
+          number: "14",
+        },
+        {
+          id: 10,
+          name: "Álvaro Jiménez",
+          position: "Goalkeeper",
+          age: 24,
+          nationality: "Spain",
+          photo: "/images/players/jimenez.jpg",
+          number: "13",
+        },
+        {
+          id: 11,
+          name: "Jorge Sáenz",
+          position: "Defender",
+          age: 26,
+          nationality: "Spain",
+          photo: "/images/players/saenz.jpg",
+          number: "5",
+        },
+        {
+          id: 12,
+          name: "Mikel González",
+          position: "Defender",
+          age: 25,
+          nationality: "Spain",
+          photo: "/images/players/gonzalez.jpg",
+          number: "4",
+        },
+      ],
+      pastFixtures: [
+        {
+          id: 1,
+          date: "2024-12-08T20:00:00Z",
+          homeTeam: "Racing de Santander",
+          awayTeam: "Mirandés",
+          homeLogo: "/images/racingLogo.png",
+          awayLogo: "/images/mirandes.png",
+          competition: "Segunda División",
+          venue: "El Sardinero",
+          homeScore: 1,
+          awayScore: 4,
+          result: "L",
+        },
+        {
+          id: 2,
+          date: "2024-12-01T18:00:00Z",
+          homeTeam: "Real Valladolid",
+          awayTeam: "Racing de Santander",
+          homeLogo: "/images/valladolid.png",
+          awayLogo: "/images/racingLogo.png",
+          competition: "Segunda División",
+          venue: "José Zorrilla",
+          homeScore: 0,
+          awayScore: 2,
+          result: "W",
+        },
+        {
+          id: 3,
+          date: "2024-11-24T20:00:00Z",
+          homeTeam: "Racing de Santander",
+          awayTeam: "CD Leganés",
+          homeLogo: "/images/racingLogo.png",
+          awayLogo: "/images/leganes.png",
+          competition: "Segunda División",
+          venue: "El Sardinero",
+          homeScore: 2,
+          awayScore: 1,
+          result: "W",
+        },
+      ],
+      leaguePosition: {
+        position: 5,
+        points: 71,
+        played: 42,
+        won: 20,
+        drawn: 11,
+        lost: 11,
+        goalDifference: 14,
+      },
+      isLive: false,
+      lastUpdated: Date.now(),
+      source: "FBref.com (fallback)",
+    };
   }
 }
 

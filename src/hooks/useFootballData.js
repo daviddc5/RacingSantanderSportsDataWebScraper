@@ -49,21 +49,11 @@ class RacingFootballData {
       this.liveData.squad &&
       this.liveData.squad.length > 0
     ) {
-      return {
-        ...this.liveData.squad,
-        isLiveData: true,
-        lastUpdated: this.liveData.lastUpdated,
-        source: this.liveData.source,
-      };
+      return this.liveData.squad;
     }
 
     // Return fallback data
-    return {
-      ...this.staticData.squad,
-      isLiveData: false,
-      lastUpdated: null,
-      source: "FBref.com (fallback)",
-    };
+    return this.staticData.squad;
   }
 
   // Get upcoming fixtures (returns empty array as requested)
@@ -88,23 +78,11 @@ class RacingFootballData {
       this.liveData.pastFixtures &&
       this.liveData.pastFixtures.length > 0
     ) {
-      const fixtures = this.liveData.pastFixtures.slice(0, limit);
-      return {
-        ...fixtures,
-        isLiveData: true,
-        lastUpdated: this.liveData.lastUpdated,
-        source: this.liveData.source,
-      };
+      return this.liveData.pastFixtures.slice(0, limit);
     }
 
     // Return fallback data
-    const fallbackFixtures = this.staticData.pastFixtures.slice(0, limit);
-    return {
-      ...fallbackFixtures,
-      isLiveData: false,
-      lastUpdated: null,
-      source: "FBref.com (fallback)",
-    };
+    return this.staticData.pastFixtures.slice(0, limit);
   }
 
   // Get league position (live or fallback)
@@ -120,21 +98,11 @@ class RacingFootballData {
     }
 
     if (this.liveData && this.liveData.leaguePosition) {
-      return {
-        ...this.liveData.leaguePosition,
-        isLiveData: true,
-        lastUpdated: this.liveData.lastUpdated,
-        source: this.liveData.source,
-      };
+      return this.liveData.leaguePosition;
     }
 
     // Return fallback data
-    return {
-      ...this.staticData.leaguePosition,
-      isLiveData: false,
-      lastUpdated: null,
-      source: "FBref.com (fallback)",
-    };
+    return this.staticData.leaguePosition;
   }
 
   // Get data status information
