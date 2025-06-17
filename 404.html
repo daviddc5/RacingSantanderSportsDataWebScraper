@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Racing de Santander - Page Not Found</title>
+    <script>
+      // GitHub Pages routing fix
+      (function () {
+        const path = window.location.pathname;
+
+        // Handle specific routes
+        if (path === "/pages/squad.html" || path === "/squad") {
+          window.location.href = "/pages/squad.html";
+          return;
+        }
+
+        if (path === "/pages/history.html" || path === "/history") {
+          window.location.href = "/pages/history.html";
+          return;
+        }
+
+        // For any other route, redirect to home
+        if (path !== "/" && path !== "/index.html") {
+          window.location.href = "/";
+          return;
+        }
+
+        // If we're already on the home page, show 404 content
+        document.addEventListener("DOMContentLoaded", function () {
+          document.body.innerHTML = `
+                    <div style="text-align: center; padding: 100px 20px; font-family: Arial, sans-serif;">
+                        <h1 style="color: #1e4d2b; margin-bottom: 20px;">404 - Page Not Found</h1>
+                        <p style="color: #666; margin-bottom: 30px;">The page you're looking for doesn't exist.</p>
+                        <a href="/" style="background: #1e4d2b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">Go Home</a>
+                    </div>
+                `;
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div
+      style="
+        text-align: center;
+        padding: 100px 20px;
+        font-family: Arial, sans-serif;
+      "
+    >
+      <h1 style="color: #1e4d2b; margin-bottom: 20px">404 - Page Not Found</h1>
+      <p style="color: #666; margin-bottom: 30px">
+        The page you're looking for doesn't exist.
+      </p>
+      <a
+        href="/"
+        style="
+          background: #1e4d2b;
+          color: white;
+          padding: 12px 24px;
+          text-decoration: none;
+          border-radius: 5px;
+        "
+        >Go Home</a
+      >
+    </div>
+  </body>
+</html>
