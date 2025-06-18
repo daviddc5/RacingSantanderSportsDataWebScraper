@@ -141,7 +141,7 @@ class RacingFootballData {
         },
         {
           id: 2,
-          name: "Andrés Martín",
+          name: "Andrés Martínnn",
           position: "Midfielder",
           age: 25,
           nationality: "Spain",
@@ -282,7 +282,7 @@ class RacingFootballData {
       ],
       leaguePosition: {
         position: 5,
-        points: 71,
+        points: 2,
         played: 42,
         won: 20,
         drawn: 11,
@@ -340,5 +340,60 @@ export const useFootballData = () => {
     getUpcomingFixtures: (limit) => fetchData("getUpcomingFixtures", limit),
     getPastFixtures: (limit) => fetchData("getPastFixtures", limit),
     getLeaguePosition: () => fetchData("getLeaguePosition"),
+    // Test function to manually trigger web scraping
+    testWebScraper: async () => {
+      console.log("🧪 TESTING WEB SCRAPER...");
+      console.log("=".repeat(50));
+
+      try {
+        // Clear cache to force fresh fetch
+        api.scraper.cache = null;
+        api.scraper.lastFetchTime = 0;
+
+        console.log("🗑️ Cache cleared, forcing fresh data fetch");
+
+        const startTime = Date.now();
+        const result = await api.scraper.fetchLiveData();
+        const endTime = Date.now();
+
+        console.log("=".repeat(50));
+        console.log("🧪 TEST RESULTS:");
+        console.log(`⏱️ Total time: ${endTime - startTime}ms`);
+        console.log(`📊 Data source: ${result.source}`);
+        console.log(`🔄 Is live data: ${result.isLive}`);
+        console.log(
+          `📅 Last updated: ${new Date(result.lastUpdated).toISOString()}`
+        );
+        console.log(`👥 Squad size: ${result.squad.length} players`);
+        console.log(`⚽ Past fixtures: ${result.pastFixtures.length} fixtures`);
+        console.log(
+          `🏆 League position: ${
+            result.leaguePosition ? "Available" : "Not found"
+          }`
+        );
+
+        if (result.squad.length > 0) {
+          console.log("👥 Sample players:");
+          result.squad.slice(0, 3).forEach((player) => {
+            console.log(`   - ${player.name} (${player.position})`);
+          });
+        }
+
+        if (result.pastFixtures.length > 0) {
+          console.log("⚽ Sample fixtures:");
+          result.pastFixtures.slice(0, 2).forEach((fixture) => {
+            console.log(
+              `   - ${fixture.homeTeam} ${fixture.homeScore}-${fixture.awayScore} ${fixture.awayTeam}`
+            );
+          });
+        }
+
+        console.log("=".repeat(50));
+        return result;
+      } catch (error) {
+        console.error("❌ Test failed:", error);
+        throw error;
+      }
+    },
   };
 };

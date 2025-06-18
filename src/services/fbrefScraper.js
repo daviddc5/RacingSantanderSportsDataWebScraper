@@ -5,15 +5,15 @@ class FBrefScraper {
   constructor() {
     this.baseUrl =
       "https://fbref.com/en/squads/dee3bbc8/Racing-Santander-Stats";
-    this.lastFetchTime = null;
     this.cache = null;
-    this.cacheExpiry = 30 * 60 * 1000; // 30 minutes cache
+    this.lastFetchTime = 0;
+    this.cacheDuration = 5 * 60 * 1000; // 5 minutes
   }
 
   // Check if cache is still valid
   isCacheValid() {
     if (!this.cache || !this.lastFetchTime) return false;
-    return Date.now() - this.lastFetchTime < this.cacheExpiry;
+    return Date.now() - this.lastFetchTime < this.cacheDuration;
   }
 
   // Fetch data from FBref
@@ -21,7 +21,7 @@ class FBrefScraper {
     try {
       // Check if we have valid cached data
       if (this.isCacheValid()) {
-        console.log("Using cached data from FBref");
+        console.log("🔄 Using cached data from FBref (cache valid)");
         return {
           ...this.cache,
           isLive: true,
@@ -30,7 +30,8 @@ class FBrefScraper {
         };
       }
 
-      console.log("Fetching fresh data from FBref...");
+      console.log("🌐 Attempting to fetch fresh data from FBref...");
+      console.log("📡 Target URL:", this.baseUrl);
 
       // Try multiple CORS proxies in case one fails
       const proxies = [
@@ -41,6 +42,7 @@ class FBrefScraper {
 
       let response = null;
       let lastError = null;
+      let successfulProxy = null;
 
       for (const proxy of proxies) {
         try {
@@ -51,8 +53,10 @@ class FBrefScraper {
 
           const fullUrl = proxy + targetUrl;
 
-          console.log(`Trying proxy: ${proxy}`);
+          console.log(`🔗 Trying proxy: ${proxy}`);
+          console.log(`📋 Full URL: ${fullUrl}`);
 
+          const startTime = Date.now();
           response = await fetch(fullUrl, {
             method: "GET",
             headers: {
@@ -65,45 +69,81 @@ class FBrefScraper {
             timeout: 10000, // 10 second timeout
           });
 
+          const endTime = Date.now();
+          console.log(`⏱️ Response time: ${endTime - startTime}ms`);
+          console.log(`📊 Response status: ${response.status}`);
+          console.log(
+            `📏 Response size: ${
+              response.headers.get("content-length") || "unknown"
+            } bytes`
+          );
+
           if (response.ok) {
-            console.log(`Successfully fetched data using proxy: ${proxy}`);
+            successfulProxy = proxy;
+            console.log(`✅ Successfully fetched data using proxy: ${proxy}`);
             break;
           } else {
-            console.warn(`Proxy ${proxy} returned status: ${response.status}`);
+            console.warn(
+              `❌ Proxy ${proxy} returned status: ${response.status}`
+            );
             lastError = new Error(`HTTP error! status: ${response.status}`);
           }
         } catch (error) {
-          console.warn(`Proxy ${proxy} failed:`, error.message);
+          console.warn(`❌ Proxy ${proxy} failed:`, error.message);
           lastError = error;
           continue;
         }
       }
 
       if (!response || !response.ok) {
-        console.warn("All proxies failed, using fallback data");
+        console.warn("❌ All proxies failed, using fallback data");
+        console.log("📋 Fallback data will be used");
         return this.getFallbackData();
       }
 
+      console.log("📄 Parsing HTML response...");
       const html = await response.text();
+      console.log(`📄 HTML length: ${html.length} characters`);
+
+      // Save a sample of the HTML for debugging
+      this.saveHtmlSample(html);
+
+      // Check if we got actual HTML content
+      if (html.length < 1000) {
+        console.warn("⚠️ Response seems too short, might be an error page");
+        console.log("📄 First 500 chars:", html.substring(0, 500));
+      }
 
       // Parse the HTML to extract data
+      console.log("🔍 Extracting data from HTML...");
       const data = this.parseFBrefData(html);
+
+      console.log("📊 Extracted data summary:");
+      console.log(`   - Squad: ${data.squad.length} players`);
+      console.log(`   - Past fixtures: ${data.pastFixtures.length} fixtures`);
+      console.log(
+        `   - League position: ${data.leaguePosition ? "Found" : "Not found"}`
+      );
 
       // Cache the results
       this.cache = data;
       this.lastFetchTime = Date.now();
 
-      console.log("Successfully fetched live data from FBref");
+      console.log("✅ Successfully fetched and parsed live data from FBref");
+      console.log(
+        `📅 Data timestamp: ${new Date(this.lastFetchTime).toISOString()}`
+      );
+      console.log(`🔗 Used proxy: ${successfulProxy}`);
 
       return {
         ...data,
         isLive: true,
         lastUpdated: this.lastFetchTime,
-        source: "FBref.com (live)",
+        source: `FBref.com (live via ${successfulProxy})`,
       };
     } catch (error) {
-      console.error("Error fetching live data from FBref:", error);
-      console.warn("Using fallback data due to network error");
+      console.error("❌ Error fetching live data from FBref:", error);
+      console.warn("🔄 Using fallback data due to network error");
       return this.getFallbackData();
     }
   }
@@ -112,6 +152,15 @@ class FBrefScraper {
   parseFBrefData(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
+
+    // Debug: Log all table IDs to see what's available
+    const allTables = doc.querySelectorAll("table");
+    console.log("🔍 Found tables:", allTables.length);
+    allTables.forEach((table, index) => {
+      const id = table.id || "no-id";
+      const classList = table.className || "no-class";
+      console.log(`   Table ${index + 1}: id="${id}", class="${classList}"`);
+    });
 
     return {
       squad: this.extractSquadData(doc),
@@ -125,22 +174,30 @@ class FBrefScraper {
     const players = [];
 
     try {
-      // Find the stats table
-      const statsTable = doc.querySelector('table[id*="stats"] tbody');
+      // Find the correct stats table
+      const statsTable = doc.querySelector(
+        'table[id="stats_standard_17"] tbody'
+      );
       if (!statsTable) {
-        console.warn("Stats table not found");
+        console.warn("❌ No stats table found with id stats_standard_17");
         return [];
       }
 
       const rows = statsTable.querySelectorAll("tr");
+      console.log(`📊 Found ${rows.length} rows in stats table`);
 
       rows.forEach((row, index) => {
         try {
-          const cells = row.querySelectorAll("td");
-          if (cells.length < 4) return;
+          // Always get player name from <th data-stat="player">
+          const th = row.querySelector('th[data-stat="player"]');
+          if (!th) return;
+          const nameCell = th.querySelector("a");
+          if (!nameCell) return;
+          const name = nameCell.textContent.trim();
+          if (!name || name === "Squad Total" || name === "Opponent Total")
+            return;
 
-          // Extract player data from table cells
-          const nameCell = row.querySelector('td[data-stat="player"] a');
+          // All other stats are in <td> cells
           const nationCell = row.querySelector('td[data-stat="nationality"]');
           const positionCell = row.querySelector('td[data-stat="position"]');
           const ageCell = row.querySelector('td[data-stat="age"]');
@@ -148,46 +205,59 @@ class FBrefScraper {
           const goalsCell = row.querySelector('td[data-stat="goals"]');
           const assistsCell = row.querySelector('td[data-stat="assists"]');
 
-          if (!nameCell) return;
-
-          const name = nameCell.textContent.trim();
           const nationality = nationCell
-            ? nationCell.textContent.trim()
+            ? nationCell.textContent.trim().split(" ").pop()
             : "Spain";
           const position = this.mapPosition(
             positionCell ? positionCell.textContent.trim() : ""
           );
-          const age = ageCell ? parseInt(ageCell.textContent) : 25;
-          const matches = matchesCell ? parseInt(matchesCell.textContent) : 0;
-          const goals = goalsCell ? parseInt(goalsCell.textContent) : 0;
-          const assists = assistsCell ? parseInt(assistsCell.textContent) : 0;
+          const age = ageCell
+            ? parseInt(ageCell.textContent.split("-")[0]) || 25
+            : 25;
+          const matches = matchesCell
+            ? parseInt(matchesCell.textContent) || 0
+            : 0;
+          const goals = goalsCell ? parseInt(goalsCell.textContent) || 0 : 0;
+          const assists = assistsCell
+            ? parseInt(assistsCell.textContent) || 0
+            : 0;
 
-          // Only include players with significant playing time
           if (matches > 0) {
             players.push({
               id: index + 1,
-              name: name,
-              position: position,
-              age: age,
-              nationality: nationality,
+              name,
+              position,
+              age,
+              nationality,
               photo: `/images/players/${name
                 .toLowerCase()
-                .replace(/\s+/g, "")}.jpg`,
+                .replace(/\s+/g, "")
+                .replace(/[^a-z]/g, "")}.jpg`,
               number: this.getPlayerNumber(name),
-              matches: matches,
-              goals: goals,
-              assists: assists,
+              matches,
+              goals,
+              assists,
             });
           }
         } catch (error) {
-          console.warn("Error parsing player row:", error);
+          console.warn(`Error parsing player row ${index}:`, error);
         }
       });
 
-      console.log(`Extracted ${players.length} players from FBref`);
+      console.log(
+        `👥 Extracted ${players.length} players from FBref using <th data-stat=\"player\">`
+      );
+      if (players.length > 0) {
+        console.log("👥 Sample players found:");
+        players.slice(0, 5).forEach((player) => {
+          console.log(
+            `   - ${player.name} (${player.position}) - ${player.goals} goals, ${player.assists} assists`
+          );
+        });
+      }
       return players;
     } catch (error) {
-      console.error("Error extracting squad data:", error);
+      console.error("❌ Error extracting squad data:", error);
       return [];
     }
   }
@@ -197,26 +267,87 @@ class FBrefScraper {
     const fixtures = [];
 
     try {
-      // Find the fixtures table
-      const fixturesTable = doc.querySelector('table[id*="scores"] tbody');
+      // Try multiple selectors to find the fixtures table
+      const possibleSelectors = [
+        'table[id*="all_results"] tbody',
+        'table[id*="results"] tbody',
+        'table[id*="scores"] tbody',
+        'table[id*="fixtures"] tbody',
+        'table[id*="matches"] tbody',
+        "table.results_table tbody",
+        "table.scores_table tbody",
+        'table[id*="all_results"] tr',
+        'table[id*="results"] tr',
+        'table[id*="scores"] tr',
+        'table[id*="fixtures"] tr',
+        'table[id*="matches"] tr',
+        "table.results_table tr",
+        "table.scores_table tr",
+      ];
+
+      let fixturesTable = null;
+      let selectorUsed = "";
+
+      for (const selector of possibleSelectors) {
+        const found = doc.querySelector(selector);
+        if (found) {
+          fixturesTable = found;
+          selectorUsed = selector;
+          console.log(`✅ Found fixtures table using selector: ${selector}`);
+          break;
+        }
+      }
+
       if (!fixturesTable) {
-        console.warn("Fixtures table not found");
+        console.warn("❌ Fixtures table not found with any selector");
+        console.log("🔍 Looking for results tables:");
+        const tables = doc.querySelectorAll("table");
+        tables.forEach((table, index) => {
+          if (
+            table.id &&
+            (table.id.includes("result") ||
+              table.id.includes("score") ||
+              table.id.includes("match"))
+          ) {
+            console.log(
+              `   Table ${index}: id="${table.id}", class="${table.className}"`
+            );
+          }
+        });
         return [];
       }
 
-      const rows = fixturesTable.querySelectorAll("tr");
+      const rows =
+        fixturesTable.tagName === "TBODY"
+          ? fixturesTable.querySelectorAll("tr")
+          : fixturesTable.querySelectorAll("tr");
+
+      console.log(`📊 Found ${rows.length} rows in fixtures table`);
       let count = 0;
 
       // Get the last 3 completed fixtures
       for (let i = rows.length - 1; i >= 0 && count < 3; i--) {
         const row = rows[i];
         try {
-          const dateCell = row.querySelector('td[data-stat="date"]');
-          const homeTeamCell = row.querySelector('td[data-stat="home_team"]');
-          const awayTeamCell = row.querySelector('td[data-stat="away_team"]');
-          const homeScoreCell = row.querySelector('td[data-stat="home_score"]');
-          const awayScoreCell = row.querySelector('td[data-stat="away_score"]');
-          const competitionCell = row.querySelector('td[data-stat="comp"]');
+          // Skip header rows
+          if (row.querySelector("th")) continue;
+
+          const cells = row.querySelectorAll("td");
+          if (cells.length < 3) continue;
+
+          // Try multiple ways to find fixture data
+          const dateCell =
+            row.querySelector('td[data-stat="date"]') || cells[0];
+          const homeTeamCell =
+            row.querySelector('td[data-stat="home_team"]') || cells[1];
+          const awayTeamCell =
+            row.querySelector('td[data-stat="away_team"]') || cells[2];
+          const homeScoreCell =
+            row.querySelector('td[data-stat="home_score"]') || cells[3];
+          const awayScoreCell =
+            row.querySelector('td[data-stat="away_score"]') || cells[4];
+          const competitionCell =
+            row.querySelector('td[data-stat="comp"]') || cells[5];
 
           if (!dateCell || !homeTeamCell || !awayTeamCell) continue;
 
@@ -271,14 +402,27 @@ class FBrefScraper {
             }
           }
         } catch (error) {
-          console.warn("Error parsing fixture row:", error);
+          console.warn(`Error parsing fixture row ${i}:`, error);
         }
       }
 
-      console.log(`Extracted ${fixtures.length} past fixtures from FBref`);
-      return fixtures.reverse(); // Return in chronological order
+      console.log(
+        `⚽ Extracted ${fixtures.length} fixtures from FBref using selector: ${selectorUsed}`
+      );
+
+      // Log fixtures for debugging
+      if (fixtures.length > 0) {
+        console.log("⚽ Sample fixtures found:");
+        fixtures.forEach((fixture) => {
+          console.log(
+            `   - ${fixture.homeTeam} ${fixture.homeScore}-${fixture.awayScore} ${fixture.awayTeam} (${fixture.result})`
+          );
+        });
+      }
+
+      return fixtures;
     } catch (error) {
-      console.error("Error extracting past fixtures:", error);
+      console.error("❌ Error extracting past fixtures:", error);
       return [];
     }
   }
@@ -297,7 +441,7 @@ class FBrefScraper {
 
       // Extract points from text like "71 points"
       const pointsMatch = pageText.match(/(\d+)\s+points/);
-      const points = pointsMatch ? parseInt(pointsMatch[1]) : 71;
+      const points = pointsMatch ? parseInt(pointsMatch[1]) : 2;
 
       // Extract record from text like "20-11-11"
       const recordMatch = pageText.match(/(\d+)-(\d+)-(\d+)/);
@@ -534,7 +678,7 @@ class FBrefScraper {
       ],
       leaguePosition: {
         position: 5,
-        points: 71,
+        points: 2,
         played: 42,
         won: 20,
         drawn: 11,
@@ -545,6 +689,48 @@ class FBrefScraper {
       lastUpdated: Date.now(),
       source: "FBref.com (fallback)",
     };
+  }
+
+  // Save a sample of the HTML for debugging
+  saveHtmlSample(html) {
+    try {
+      // Create a sample of the HTML for debugging
+      const sample = html.substring(0, 10000); // First 10k characters
+
+      // Log key sections that might contain tables
+      const tableSections = [
+        { name: "Stats Table", pattern: /<table[^>]*id[^>]*stats[^>]*>/i },
+        { name: "Squad Table", pattern: /<table[^>]*id[^>]*squad[^>]*>/i },
+        { name: "Results Table", pattern: /<table[^>]*id[^>]*results[^>]*>/i },
+        { name: "Scores Table", pattern: /<table[^>]*id[^>]*scores[^>]*>/i },
+        { name: "Any Table", pattern: /<table[^>]*>/i },
+      ];
+
+      console.log("🔍 HTML Structure Analysis:");
+      tableSections.forEach((section) => {
+        const matches = sample.match(section.pattern);
+        if (matches) {
+          console.log(`   ✅ Found ${section.name}:`, matches[0]);
+        } else {
+          console.log(`   ❌ No ${section.name} found`);
+        }
+      });
+
+      // Look for specific data-stat attributes
+      const dataStats = sample.match(/data-stat="[^"]*"/g);
+      if (dataStats) {
+        console.log(
+          "📊 Found data-stat attributes:",
+          [...new Set(dataStats)].slice(0, 10)
+        );
+      }
+
+      // Save to localStorage for manual inspection
+      localStorage.setItem("fbref_html_sample", sample);
+      console.log("💾 HTML sample saved to localStorage (fbref_html_sample)");
+    } catch (error) {
+      console.warn("Could not save HTML sample:", error);
+    }
   }
 }
 

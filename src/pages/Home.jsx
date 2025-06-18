@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useFootballData } from "../hooks/useFootballData";
+import ScraperTest from "../components/ScraperTest";
 import "./Home.css";
 
 const Home = () => {
@@ -230,6 +231,13 @@ const Home = () => {
               <p className="error-text">Error loading data: {error}</p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Web Scraper Test Section */}
+      <section className="test-section">
+        <div className="container">
+          <ScraperTest />
         </div>
       </section>
     </>
