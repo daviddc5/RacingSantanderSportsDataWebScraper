@@ -188,8 +188,8 @@ const Home = () => {
     <>
       <section className="hero">
         <div className="hero-content">
-          <h1>SOMOS RACING</h1>
-          <h3>The heart of Cantabria beats here</h3>
+          <h1>REAL RACING FUTBOL CLUB SANTANDER</h1>
+          <h3>En el corazón del campo, el alma de Cantabria.</h3>
         </div>
       </section>
 

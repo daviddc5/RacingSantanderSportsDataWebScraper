@@ -324,3 +324,34 @@
     margin-bottom: 8px;
   }
 }
+
+.hero {
+  background: linear-gradient(rgba(20, 62, 27, 0.85), rgba(20, 62, 27, 0.85)),
+    url("/images/racingLogo.png") center center/200px no-repeat,
+    var(--racing-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--white);
+  height: 48vh;
+  min-height: 340px;
+  position: relative;
+  padding: 60px 0 40px 0;
+}
+
+.hero-content h1 {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--white);
+  text-shadow: 2px 2px 8px rgba(20, 62, 27, 0.7);
+}
+
+.hero-content h3 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--white);
+  text-shadow: 1px 1px 4px rgba(20, 62, 27, 0.7);
+}

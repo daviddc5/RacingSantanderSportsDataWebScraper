@@ -1,7 +1,10 @@
+/* Use Racing Santander color palette */
 .App {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--white);
+  color: var(--black);
 }
 
 main {
@@ -10,7 +13,7 @@ main {
 
 /* Hero section */
 .hero {
-  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+  background: linear-gradient(rgba(20, 20, 20, 0.5), rgba(20, 20, 20, 0.5)),
     url("/images/racingStadium.jpg");
   background-size: cover;
   background-position: center;
@@ -19,19 +22,19 @@ main {
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: var(--color-white);
+  color: var(--white);
 }
 
 .hero-content h1 {
   font-size: 4rem;
   margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 2px 2px 4px var(--racing-green-dark);
 }
 
 .hero-content h3 {
   font-size: 1.5rem;
   font-weight: 400;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px 2px var(--racing-green-dark);
 }
 
 @media (max-width: 768px) {
