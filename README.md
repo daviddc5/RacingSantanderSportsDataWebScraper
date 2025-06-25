@@ -1,4 +1,4 @@
-# Racing de Santander Fan Site
+# Racing Football club Santander Fan Site
 
 Link to project below:
 
