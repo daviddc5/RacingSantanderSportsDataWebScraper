@@ -189,6 +189,7 @@ class FBrefScraperService:
                         continue
                     
                     name_cell = th.find('a')
+                    print(f"name cell is {name_cell}")
                     if not name_cell:
                         continue
                     
