@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useFootballData } from "../hooks/useFootballData";
-import ScraperTest from "../components/ScraperTest";
+
 import "./Home.css";
 
 const Home = () => {
