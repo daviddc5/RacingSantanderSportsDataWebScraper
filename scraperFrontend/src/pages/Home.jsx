@@ -233,13 +233,6 @@ const Home = () => {
           )}
         </div>
       </section>
-
-      {/* Web Scraper Test Section */}
-      <section className="test-section">
-        <div className="container">
-          <ScraperTest />
-        </div>
-      </section>
     </>
   );
 };
