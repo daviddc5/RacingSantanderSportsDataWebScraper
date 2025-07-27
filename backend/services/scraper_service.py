@@ -254,6 +254,7 @@ class FBrefScraperService:
                             "goals": goals,
                             "assists": assists,
                         })
+                    print(f"player is {players}")
                         
                 except Exception as error:
                     logger.warning(f"Error parsing player row {index}: {str(error)}")
@@ -271,117 +272,156 @@ class FBrefScraperService:
             return []
 
     def extract_past_fixtures(self, soup: BeautifulSoup) -> List[Dict[str, Any]]:
-        """Extract past fixtures from the fixtures table"""
+        """Extract past fixtures from the fixtures table using the correct table selector"""
         fixtures = []
         
         try:
-            # Try multiple selectors to find the fixtures table
-            possible_selectors = [
-                'table[id*="all_results"] tbody',
-                'table[id*="results"] tbody',
-                'table[id*="scores"] tbody',
-                'table[id*="fixtures"] tbody',
-                'table[id*="matches"] tbody',
-                'table.results_table tbody',
-                'table.scores_table tbody',
-            ]
+            # Log table search for debugging
+            all_tables = soup.find_all('table')
+            logger.info(f"🔍 Found {len(all_tables)} tables in the page")
             
-            fixtures_table = None
-            selector_used = ""
-            
-            for selector in possible_selectors:
-                found = soup.select_one(selector)
-                if found:
-                    fixtures_table = found
-                    selector_used = selector
-                    logger.info(f"✅ Found fixtures table using selector: {selector}")
-                    break
-            
+            # Use the correct table selector: #matchlogs_for
+            fixtures_table = soup.find('table', id='matchlogs_for')
             if not fixtures_table:
-                logger.warning("❌ Fixtures table not found with any selector")
+                logger.warning("❌ Fixtures table not found with id 'matchlogs_for'")
+                # Try alternative selectors
+                alternative_selectors = [
+                    'table[id*="matchlogs"]',
+                    'table[id*="results"]',
+                    'table[id*="fixtures"]',
+                    'table[id*="scores"]'
+                ]
+                for selector in alternative_selectors:
+                    alt_table = soup.select_one(selector)
+                    if alt_table:
+                        logger.info(f"✅ Found alternative table with selector: {selector}")
+                        fixtures_table = alt_table
+                        break
+                
+                if not fixtures_table:
+                    logger.warning("❌ No fixtures table found with any selector")
+                    return []
+            
+            tbody = fixtures_table.find('tbody')
+            if not tbody:
+                logger.warning("❌ No tbody found in fixtures table")
                 return []
             
-            rows = fixtures_table.find_all('tr')
-            logger.info(f"📊 Found {len(rows)} rows in fixtures table")
+            # Get all rows with data-row attribute, excluding header rows
+            rows = tbody.find_all('tr', attrs={'data-row': True})
+            logger.info(f"📊 Found {len(rows)} data rows in fixtures table")
+            
+            # If no rows with data-row, try all tr elements
+            if not rows:
+                logger.info("🔍 No rows with data-row attribute, trying all tr elements")
+                rows = tbody.find_all('tr')
+                logger.info(f"📊 Found {len(rows)} total rows in fixtures table")
+            
             count = 0
             
-            # Get the last 3 completed fixtures
+            # Get the last 3 completed fixtures (process in reverse order)
             for i in range(len(rows) - 1, -1, -1):
                 if count >= 3:
                     break
                     
                 row = rows[i]
                 try:
-                    # Skip header rows
-                    if row.find('th'):
+                    # Skip header rows (rows with class "thead")
+                    if row.get('class') and 'thead' in row.get('class'):
                         continue
                     
-                    cells = row.find_all('td')
-                    if len(cells) < 3:
-                        continue
+                    # Extract data using the correct data-stat attributes
+                    date_cell = row.find('th', {'data-stat': 'date'})
+                    time_cell = row.find('td', {'data-stat': 'start_time'})
+                    competition_cell = row.find('td', {'data-stat': 'comp'})
+                    round_cell = row.find('td', {'data-stat': 'round'})
+                    venue_cell = row.find('td', {'data-stat': 'venue'})
+                    result_cell = row.find('td', {'data-stat': 'result'})
+                    goals_for_cell = row.find('td', {'data-stat': 'goals_for'})
+                    goals_against_cell = row.find('td', {'data-stat': 'goals_against'})
+                    opponent_cell = row.find('td', {'data-stat': 'opponent'})
+                    attendance_cell = row.find('td', {'data-stat': 'attendance'})
+                    referee_cell = row.find('td', {'data-stat': 'referee'})
                     
-                    # Try multiple ways to find fixture data
-                    date_cell = row.find('td', {'data-stat': 'date'}) or (cells[0] if len(cells) > 0 else None)
-                    home_team_cell = row.find('td', {'data-stat': 'home_team'}) or (cells[1] if len(cells) > 1 else None)
-                    away_team_cell = row.find('td', {'data-stat': 'away_team'}) or (cells[2] if len(cells) > 2 else None)
-                    home_score_cell = row.find('td', {'data-stat': 'home_score'}) or (cells[3] if len(cells) > 3 else None)
-                    away_score_cell = row.find('td', {'data-stat': 'away_score'}) or (cells[4] if len(cells) > 4 else None)
-                    competition_cell = row.find('td', {'data-stat': 'comp'}) or (cells[5] if len(cells) > 5 else None)
+                    # Try alternative data-stat attributes if the main ones don't work
+                    if not date_cell:
+                        date_cell = row.find('td', {'data-stat': 'date'})
+                    if not opponent_cell:
+                        opponent_cell = row.find('td', {'data-stat': 'team'})
+                    if not goals_for_cell:
+                        goals_for_cell = row.find('td', {'data-stat': 'gf'})
+                    if not goals_against_cell:
+                        goals_against_cell = row.find('td', {'data-stat': 'ga'})
                     
-                    if not all([date_cell, home_team_cell, away_team_cell]):
+                    if not all([date_cell, opponent_cell, goals_for_cell, goals_against_cell]):
                         continue
                     
                     date = date_cell.get_text(strip=True)
-                    home_team = home_team_cell.get_text(strip=True)
-                    away_team = away_team_cell.get_text(strip=True)
+                    opponent = opponent_cell.get_text(strip=True)
                     
-                    home_score = None
-                    away_score = None
+                    # Parse scores
+                    goals_for = None
+                    goals_against = None
                     
-                    if home_score_cell:
-                        try:
-                            home_score = int(home_score_cell.get_text(strip=True))
-                        except ValueError:
-                            pass
+                    try:
+                        goals_for = int(goals_for_cell.get_text(strip=True))
+                    except (ValueError, AttributeError):
+                        pass
                     
-                    if away_score_cell:
-                        try:
-                            away_score = int(away_score_cell.get_text(strip=True))
-                        except ValueError:
-                            pass
-                    
-                    competition = "Segunda División"
-                    if competition_cell:
-                        competition = competition_cell.get_text(strip=True)
+                    try:
+                        goals_against = int(goals_against_cell.get_text(strip=True))
+                    except (ValueError, AttributeError):
+                        pass
                     
                     # Only include completed matches
-                    if home_score is not None and away_score is not None:
-                        is_racing_home = "racing" in home_team.lower() or "santander" in home_team.lower()
-                        is_racing_away = "racing" in away_team.lower() or "santander" in away_team.lower()
+                    if goals_for is not None and goals_against is not None:
+                        # Determine if Racing was home or away
+                        venue = venue_cell.get_text(strip=True) if venue_cell else ""
+                        is_racing_home = venue.lower() == "home"
                         
-                        if is_racing_home or is_racing_away:
-                            result = self.calculate_result(home_score, away_score, is_racing_home)
-                            
-                            fixtures.append({
-                                "id": count + 1,
-                                "date": self.parse_date(date),
-                                "homeTeam": home_team,
-                                "awayTeam": away_team,
-                                "homeLogo": f"/images/{home_team.lower().replace(' ', '')}.png",
-                                "awayLogo": f"/images/{away_team.lower().replace(' ', '')}.png",
-                                "competition": competition,
-                                "venue": "El Sardinero" if is_racing_home else "Away",
-                                "homeScore": home_score,
-                                "awayScore": away_score,
-                                "result": result,
-                            })
-                            
-                            count += 1
-                            
+                        # Set team names based on venue
+                        if is_racing_home:
+                            home_team = "Racing de Santander"
+                            away_team = opponent
+                            home_score = goals_for
+                            away_score = goals_against
+                        else:
+                            home_team = opponent
+                            away_team = "Racing de Santander"
+                            home_score = goals_against
+                            away_score = goals_for
+                        
+                        # Get additional data
+                        competition = competition_cell.get_text(strip=True) if competition_cell else "Segunda División"
+                        round_info = round_cell.get_text(strip=True) if round_cell else ""
+                        result = result_cell.get_text(strip=True) if result_cell else ""
+                        
+                        # Calculate result from Racing's perspective
+                        racing_result = self.calculate_result(home_score, away_score, is_racing_home)
+                        
+                        fixtures.append({
+                            "id": count + 1,
+                            "date": self.parse_date(date),
+                            "homeTeam": home_team,
+                            "awayTeam": away_team,
+                            "homeLogo": f"/images/{home_team.lower().replace(' ', '').replace('de', '')}.png",
+                            "awayLogo": f"/images/{away_team.lower().replace(' ', '').replace('de', '')}.png",
+                            "competition": competition,
+                            "round": round_info,
+                            "venue": "El Sardinero" if is_racing_home else "Away",
+                            "homeScore": home_score,
+                            "awayScore": away_score,
+                            "result": racing_result,
+                            "attendance": attendance_cell.get_text(strip=True) if attendance_cell else "",
+                            "referee": referee_cell.get_text(strip=True) if referee_cell else "",
+                        })
+                        
+                        count += 1
+                        
                 except Exception as error:
                     logger.warning(f"Error parsing fixture row {i}: {str(error)}")
             
-            logger.info(f"⚽ Extracted {len(fixtures)} fixtures from FBref using selector: {selector_used}")
+            logger.info(f"⚽ Extracted {len(fixtures)} fixtures from FBref using table id 'matchlogs_for'")
             
             # Log fixtures for debugging
             if fixtures:
