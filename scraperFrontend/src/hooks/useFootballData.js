@@ -1,28 +1,97 @@
 import { useState, useEffect } from "react";
-import FBrefScraper from "../services/fbrefScraper";
 
-// Racing Santander Football Data - Live + Fallback Implementation
-// Uses FBref web scraping with fallback to static data
+// Racing Santander Football Data - Backend API Implementation
+// Uses FastAPI backend for web scraping with fallback to static data
+
+const BACKEND_API_URL = "http://localhost:8000/api/v1/scrape/fbref";
 
 class RacingFootballData {
   constructor() {
-    this.scraper = new FBrefScraper();
     this.staticData = this.getStaticData();
     this.liveData = null;
     this.lastFetchAttempt = null;
     this.fetchInterval = 30 * 60 * 1000; // 30 minutes
   }
 
-  // Initialize live data fetching
+  // Initialize live data fetching from backend
   async initialize() {
     try {
-      console.log("Initializing live data fetch from FBref...");
-      this.liveData = await this.scraper.fetchLiveData();
+      console.log("Initializing live data fetch from backend API...");
+      console.log("⏳ This may take up to 60 seconds for web scraping...");
+      this.liveData = await this.fetchFromBackend();
       this.lastFetchAttempt = Date.now();
       console.log("Live data initialized successfully");
     } catch (error) {
       console.warn("Failed to initialize live data, using static data:", error);
       this.liveData = null;
+    }
+  }
+
+  // Fetch data from backend API
+  async fetchFromBackend() {
+    try {
+      console.log("🌐 Fetching data from backend API...");
+      console.log(`📡 API URL: ${BACKEND_API_URL}`);
+
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+      const startTime = Date.now();
+      const response = await fetch(BACKEND_API_URL, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId); // Clear timeout if request completes
+
+      const endTime = Date.now();
+      console.log(`⏱️ API Response time: ${endTime - startTime}ms`);
+      console.log(`📊 Response status: ${response.status}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("📄 Parsing API response...");
+
+      if (!result.success || !result.data) {
+        throw new Error("Invalid response format from backend");
+      }
+
+      const data = result.data;
+      console.log("📊 Backend API data summary:");
+      console.log(`   - Squad: ${data.squad?.length || 0} players`);
+      console.log(
+        `   - Past fixtures: ${data.pastFixtures?.length || 0} fixtures`
+      );
+      console.log(
+        `   - League position: ${data.leaguePosition ? "Found" : "Not found"}`
+      );
+      console.log(`   - Data source: ${data.source}`);
+      console.log(`   - Is live: ${data.isLive}`);
+
+      return data;
+    } catch (error) {
+      console.error("❌ Error fetching from backend API:", error);
+
+      // Provide more specific error messages
+      if (error.name === "AbortError") {
+        throw new Error(
+          "Backend API request timed out after 60 seconds. The web scraping operation may be taking longer than usual."
+        );
+      } else if (error.message.includes("fetch")) {
+        throw new Error(
+          "Failed to connect to backend API. Make sure the backend server is running on http://localhost:8000"
+        );
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -37,7 +106,7 @@ class RacingFootballData {
     // Try to refresh live data if needed
     if (this.shouldRefreshLiveData()) {
       try {
-        this.liveData = await this.scraper.fetchLiveData();
+        this.liveData = await this.fetchFromBackend();
         this.lastFetchAttempt = Date.now();
       } catch (error) {
         console.warn("Failed to refresh live data:", error);
@@ -66,7 +135,7 @@ class RacingFootballData {
     // Try to refresh live data if needed
     if (this.shouldRefreshLiveData()) {
       try {
-        this.liveData = await this.scraper.fetchLiveData();
+        this.liveData = await this.fetchFromBackend();
         this.lastFetchAttempt = Date.now();
       } catch (error) {
         console.warn("Failed to refresh live data:", error);
@@ -90,7 +159,7 @@ class RacingFootballData {
     // Try to refresh live data if needed
     if (this.shouldRefreshLiveData()) {
       try {
-        this.liveData = await this.scraper.fetchLiveData();
+        this.liveData = await this.fetchFromBackend();
         this.lastFetchAttempt = Date.now();
       } catch (error) {
         console.warn("Failed to refresh live data:", error);
@@ -109,7 +178,7 @@ class RacingFootballData {
   getDataStatus() {
     if (this.liveData) {
       return {
-        isLive: true,
+        isLive: this.liveData.isLive || false,
         lastUpdated: this.liveData.lastUpdated,
         source: this.liveData.source,
         message: `Data is up to date as of ${new Date(
@@ -120,19 +189,19 @@ class RacingFootballData {
       return {
         isLive: false,
         lastUpdated: null,
-        source: "FBref.com (fallback)",
+        source: "Backend API (fallback)",
         message: "Using fallback data - live data unavailable",
       };
     }
   }
 
-  // Get static data with real Racing Santander information from FBref (2024-2025 season)
+  // Get static data with real Racing Santander information (2024-2025 season)
   getStaticData() {
     return {
       squad: [
         {
           id: 1,
-          name: "Jokin Ezkieta",
+          name: "Joakin Ezkieta",
           position: "Goalkeeper",
           age: 28,
           nationality: "Spain",
@@ -141,7 +210,7 @@ class RacingFootballData {
         },
         {
           id: 2,
-          name: "Andrés Martínnn",
+          name: "Andrés Martín",
           position: "Midfielder",
           age: 25,
           nationality: "Spain",
@@ -340,20 +409,20 @@ export const useFootballData = () => {
     getUpcomingFixtures: (limit) => fetchData("getUpcomingFixtures", limit),
     getPastFixtures: (limit) => fetchData("getPastFixtures", limit),
     getLeaguePosition: () => fetchData("getLeaguePosition"),
-    // Test function to manually trigger web scraping
-    testWebScraper: async () => {
-      console.log("🧪 TESTING WEB SCRAPER...");
+    // Test function to manually trigger backend API call
+    testBackendAPI: async () => {
+      console.log("🧪 TESTING BACKEND API...");
       console.log("=".repeat(50));
 
       try {
         // Clear cache to force fresh fetch
-        api.scraper.cache = null;
-        api.scraper.lastFetchTime = 0;
+        api.liveData = null;
+        api.lastFetchAttempt = 0;
 
-        console.log("🗑️ Cache cleared, forcing fresh data fetch");
+        console.log("🗑️ Cache cleared, forcing fresh API call");
 
         const startTime = Date.now();
-        const result = await api.scraper.fetchLiveData();
+        const result = await api.fetchFromBackend();
         const endTime = Date.now();
 
         console.log("=".repeat(50));

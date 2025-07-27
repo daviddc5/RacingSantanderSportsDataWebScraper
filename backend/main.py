@@ -13,6 +13,7 @@ load_dotenv()
 
 # Import controllers and middleware
 from controllers import items_router, health_router
+from controllers.scraper_controller import scraper_router
 from middleware import setup_cors, setup_logging, setup_error_handling
 
 # Create FastAPI app
@@ -33,6 +34,7 @@ setup_error_handling(app) # Error handling should be last
 # Include routers
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(items_router, prefix="/api/v1")
+app.include_router(scraper_router, prefix="/api/v1")
 
 # Root endpoint
 @app.get("/", tags=["root"])
@@ -62,6 +64,10 @@ app.openapi_tags = [
     {
         "name": "items",
         "description": "Operations with items - CRUD operations and search"
+    },
+    {
+        "name": "scraper",
+        "description": "Web scraping operations for Racing Santander data"
     }
 ]
 

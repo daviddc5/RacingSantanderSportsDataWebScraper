@@ -8,5 +8,10 @@ pydantic>=2.0.0
 pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 
+# Web scraping dependencies
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
 # Note: For exact versions, refer to poetry.lock
 # This file provides minimum compatible versions for pip installations 
