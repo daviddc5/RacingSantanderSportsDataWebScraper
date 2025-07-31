@@ -14,6 +14,7 @@ load_dotenv()
 # Import controllers and middleware
 from controllers import items_router, health_router
 from controllers.scraper_controller import scraper_router
+from controllers.football_controller import football_router
 from middleware import setup_cors, setup_logging, setup_error_handling
 
 # Create FastAPI app
@@ -35,6 +36,7 @@ setup_error_handling(app) # Error handling should be last
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(items_router, prefix="/api/v1")
 app.include_router(scraper_router, prefix="/api/v1")
+app.include_router(football_router)  # Football router already has prefix
 
 # Root endpoint
 @app.get("/", tags=["root"])
@@ -68,6 +70,10 @@ app.openapi_tags = [
     {
         "name": "scraper",
         "description": "Web scraping operations for Racing Santander data from FBref.com - now with focused endpoints for better performance and caching"
+    },
+    {
+        "name": "football",
+        "description": "Instant-load football data from database with async updates - optimized for performance with Supabase integration"
     }
 ]
 

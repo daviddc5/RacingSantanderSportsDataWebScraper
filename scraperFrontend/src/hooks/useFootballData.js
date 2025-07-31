@@ -1,85 +1,85 @@
 import { useState, useEffect } from "react";
 
-// Racing Santander Football Data - NEW Focused Endpoints Implementation
-// Uses individual FastAPI endpoints for better performance and caching
+// Racing Santander Football Data - INSTANT LOAD with Async Updates
+// Uses new database-backed endpoints for instant loading with background updates
 
-// New focused API endpoints
-const API_BASE_URL = "http://localhost:8000/api/v1/scrape";
+// New instant-load API endpoints (database + async updates)
+const API_BASE_URL = "http://localhost:8000/api/v1/football";
 const ENDPOINTS = {
   players: `${API_BASE_URL}/players`,
   fixtures: `${API_BASE_URL}/fixtures`,
   standings: `${API_BASE_URL}/standings`,
-  // Keep legacy endpoint for fallback
-  legacy: `${API_BASE_URL}/fbref`,
+  status: `${API_BASE_URL}/status`,
+  refresh: `${API_BASE_URL}/refresh`,
+  // Keep legacy scraper endpoints for fallback
+  legacy: {
+    players: "http://localhost:8000/api/v1/scrape/players",
+    fixtures: "http://localhost:8000/api/v1/scrape/fixtures",
+    standings: "http://localhost:8000/api/v1/scrape/standings",
+  },
 };
 
-class RacingFootballDataV2 {
+class RacingFootballDataV3 {
   constructor() {
-    // Separate caches for each data type
+    // Data cache - now only for client-side storage, server handles DB caching
     this.playersData = null;
     this.fixturesData = null;
     this.standingsData = null;
 
-    // Separate timestamps for cache management
+    // Last fetch timestamps - for client-side optimization
     this.playersLastFetch = null;
     this.fixturesLastFetch = null;
     this.standingsLastFetch = null;
 
-    // Cache durations (matching backend)
-    this.playersCacheDuration = 15 * 60 * 1000; // 15 minutes
-    this.fixturesCacheDuration = 5 * 60 * 1000; // 5 minutes
-    this.standingsCacheDuration = 10 * 60 * 1000; // 10 minutes
+    // Client-side cache durations (much shorter since DB is fast)
+    this.clientCacheDuration = 30 * 1000; // 30 seconds
 
-    // Static fallback data
+    // Static fallback data (keep existing)
     this.staticData = this.getStaticData();
   }
 
-  // Check if cached data is still valid
-  isCacheValid(type) {
-    const now = Date.now();
-    const cache = {
-      players: {
-        data: this.playersData,
-        lastFetch: this.playersLastFetch,
-        duration: this.playersCacheDuration,
-      },
-      fixtures: {
-        data: this.fixturesData,
-        lastFetch: this.fixturesLastFetch,
-        duration: this.fixturesCacheDuration,
-      },
+  // Check if client-side cache is still valid
+  isClientCacheValid(type) {
+    const cacheInfo = {
+      players: { data: this.playersData, lastFetch: this.playersLastFetch },
+      fixtures: { data: this.fixturesData, lastFetch: this.fixturesLastFetch },
       standings: {
         data: this.standingsData,
         lastFetch: this.standingsLastFetch,
-        duration: this.standingsCacheDuration,
       },
-    };
+    }[type];
 
-    const cacheInfo = cache[type];
-    return (
-      cacheInfo.data &&
-      cacheInfo.lastFetch &&
-      now - cacheInfo.lastFetch < cacheInfo.duration
-    );
+    if (!cacheInfo.data || !cacheInfo.lastFetch) {
+      return false;
+    }
+
+    const now = Date.now();
+    return now - cacheInfo.lastFetch < this.clientCacheDuration;
   }
 
-  // Generic fetch method for any endpoint
-  async fetchFromEndpoint(endpoint, dataType) {
+  // Generic fetch method for instant-load endpoints
+  async fetchFromInstantEndpoint(endpoint, dataType, forceUpdate = false) {
     try {
-      console.log(`🌐 Fetching ${dataType} data from: ${endpoint}`);
+      console.log(
+        `🚀 Fetching ${dataType} data instantly from database: ${endpoint}`
+      );
 
       const startTime = Date.now();
-      const response = await fetch(endpoint, {
+      const url = forceUpdate ? `${endpoint}?force_update=true` : endpoint;
+
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        signal: AbortSignal.timeout(60000), // 60 second timeout
+        signal: AbortSignal.timeout(10000), // 10 second timeout (much faster expected)
       });
 
       const endTime = Date.now();
-      console.log(`⏱️ ${dataType} API Response time: ${endTime - startTime}ms`);
+      console.log(
+        `⚡ ${dataType} instant API response time: ${endTime - startTime}ms`
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -91,9 +91,26 @@ class RacingFootballDataV2 {
         throw new Error(`Invalid response format from ${dataType} endpoint`);
       }
 
-      console.log(`✅ Successfully fetched ${dataType} data`);
+      // Log detailed info about the response
+      console.log(`✅ Successfully fetched ${dataType} data from database`);
+      console.log(`💾 From cache: ${result.from_cache}`);
+      console.log(`🔄 Needs update: ${result.needs_update}`);
+      console.log(`⏳ Currently updating: ${result.updating}`);
       console.log(`📊 Source: ${result.data.source}`);
       console.log(`🔄 Is live: ${result.data.isLive}`);
+
+      // Store the fetch time and data
+      const now = Date.now();
+      if (dataType === "players") {
+        this.playersData = result.data;
+        this.playersLastFetch = now;
+      } else if (dataType === "fixtures") {
+        this.fixturesData = result.data;
+        this.fixturesLastFetch = now;
+      } else if (dataType === "standings") {
+        this.standingsData = result.data;
+        this.standingsLastFetch = now;
+      }
 
       return result.data;
     } catch (error) {
@@ -102,319 +119,299 @@ class RacingFootballDataV2 {
     }
   }
 
-  // Fetch squad/players data
-  async fetchPlayersData() {
-    if (this.isCacheValid("players")) {
-      console.log("🔄 Using cached players data");
+  // Fetch squad/players data (instant from DB)
+  async fetchPlayersData(forceUpdate = false) {
+    // Return client cache if valid and not forcing update
+    if (!forceUpdate && this.isClientCacheValid("players")) {
+      console.log("🔄 Using client-cached players data");
       return this.playersData;
     }
 
     try {
-      const data = await this.fetchFromEndpoint(ENDPOINTS.players, "players");
-      this.playersData = data;
-      this.playersLastFetch = Date.now();
-      console.log(`👥 Fetched ${data.squad?.length || 0} players`);
-      return data;
+      return await this.fetchFromInstantEndpoint(
+        ENDPOINTS.players,
+        "players",
+        forceUpdate
+      );
     } catch (error) {
-      console.warn("Using static players data due to fetch error");
-      return {
-        squad: this.staticData.squad,
-        isLive: false,
-        source: "Static fallback",
-      };
+      console.warn(
+        "⚠️ Instant players endpoint failed, trying legacy scraper endpoint"
+      );
+      try {
+        // Fallback to legacy scraper endpoint
+        const response = await fetch(ENDPOINTS.legacy.players);
+        const result = await response.json();
+        if (result.success && result.data) {
+          this.playersData = result.data;
+          this.playersLastFetch = Date.now();
+          return result.data;
+        }
+      } catch (legacyError) {
+        console.error("❌ Legacy players endpoint also failed:", legacyError);
+      }
+
+      // Final fallback to static data
+      console.log("🔄 Using static fallback data for players");
+      return this.staticData.squadData;
     }
   }
 
-  // Fetch fixtures data
-  async fetchFixturesData() {
-    if (this.isCacheValid("fixtures")) {
-      console.log("🔄 Using cached fixtures data");
+  // Fetch fixtures data (instant from DB)
+  async fetchFixturesData(forceUpdate = false) {
+    // Return client cache if valid and not forcing update
+    if (!forceUpdate && this.isClientCacheValid("fixtures")) {
+      console.log("🔄 Using client-cached fixtures data");
       return this.fixturesData;
     }
 
     try {
-      const data = await this.fetchFromEndpoint(ENDPOINTS.fixtures, "fixtures");
-      this.fixturesData = data;
-      this.fixturesLastFetch = Date.now();
-      console.log(`⚽ Fetched ${data.pastFixtures?.length || 0} fixtures`);
-      return data;
+      return await this.fetchFromInstantEndpoint(
+        ENDPOINTS.fixtures,
+        "fixtures",
+        forceUpdate
+      );
     } catch (error) {
-      console.warn("Using static fixtures data due to fetch error");
-      return {
-        pastFixtures: this.staticData.pastFixtures,
-        isLive: false,
-        source: "Static fallback",
-      };
+      console.warn(
+        "⚠️ Instant fixtures endpoint failed, trying legacy scraper endpoint"
+      );
+      try {
+        // Fallback to legacy scraper endpoint
+        const response = await fetch(ENDPOINTS.legacy.fixtures);
+        const result = await response.json();
+        if (result.success && result.data) {
+          this.fixturesData = result.data;
+          this.fixturesLastFetch = Date.now();
+          return result.data;
+        }
+      } catch (legacyError) {
+        console.error("❌ Legacy fixtures endpoint also failed:", legacyError);
+      }
+
+      // Final fallback to static data
+      console.log("🔄 Using static fallback data for fixtures");
+      return this.staticData.fixturesData;
     }
   }
 
-  // Fetch standings data
-  async fetchStandingsData() {
-    if (this.isCacheValid("standings")) {
-      console.log("🔄 Using cached standings data");
+  // Fetch standings data (instant from DB)
+  async fetchStandingsData(forceUpdate = false) {
+    // Return client cache if valid and not forcing update
+    if (!forceUpdate && this.isClientCacheValid("standings")) {
+      console.log("🔄 Using client-cached standings data");
       return this.standingsData;
     }
 
     try {
-      const data = await this.fetchFromEndpoint(
+      return await this.fetchFromInstantEndpoint(
         ENDPOINTS.standings,
-        "standings"
+        "standings",
+        forceUpdate
       );
-      this.standingsData = data;
-      this.standingsLastFetch = Date.now();
-      console.log(
-        `📊 Fetched league position: ${
-          data.leaguePosition?.position || "Unknown"
-        }`
-      );
-      return data;
     } catch (error) {
-      console.warn("Using static standings data due to fetch error");
-      return {
-        leaguePosition: this.staticData.leaguePosition,
-        isLive: false,
-        source: "Static fallback",
-      };
+      console.warn(
+        "⚠️ Instant standings endpoint failed, trying legacy scraper endpoint"
+      );
+      try {
+        // Fallback to legacy scraper endpoint
+        const response = await fetch(ENDPOINTS.legacy.standings);
+        const result = await response.json();
+        if (result.success && result.data) {
+          this.standingsData = result.data;
+          this.standingsLastFetch = Date.now();
+          return result.data;
+        }
+      } catch (legacyError) {
+        console.error("❌ Legacy standings endpoint also failed:", legacyError);
+      }
+
+      // Final fallback to static data
+      console.log("🔄 Using static fallback data for standings");
+      return this.staticData.standingsData;
     }
   }
 
-  // Public methods for components
-  async getSquadData() {
-    const data = await this.fetchPlayersData();
-    return data.squad || [];
-  }
-
-  async getPastFixtures(limit = 3) {
-    const data = await this.fetchFixturesData();
-    const fixtures = data.pastFixtures || [];
-    return limit ? fixtures.slice(0, limit) : fixtures;
-  }
-
-  async getUpcomingFixtures(limit = 5) {
-    // Racing Santander doesn't have upcoming fixtures data in FBref
-    // Return empty array as requested in original implementation
-    return [];
-  }
-
-  async getLeaguePosition() {
-    const data = await this.fetchStandingsData();
-    return data.leaguePosition || null;
-  }
-
-  // Get overall data status for debugging
-  getDataStatus() {
-    const now = Date.now();
-
-    // Find the most recent successful fetch
-    let latestData = null;
-    let latestTime = 0;
-
-    if (this.playersData && this.playersLastFetch > latestTime) {
-      latestData = this.playersData;
-      latestTime = this.playersLastFetch;
-    }
-    if (this.fixturesData && this.fixturesLastFetch > latestTime) {
-      latestData = this.fixturesData;
-      latestTime = this.fixturesLastFetch;
-    }
-    if (this.standingsData && this.standingsLastFetch > latestTime) {
-      latestData = this.standingsData;
-      latestTime = this.standingsLastFetch;
-    }
-
-    return {
-      isLive: latestData?.isLive || false,
-      source: latestData?.source || "No data fetched yet",
-      lastUpdated: latestTime || null,
-      message: latestData?.isLive
-        ? "Live data from FBref.com"
-        : "Using fallback data",
-      cacheStatus: {
-        players: this.isCacheValid("players") ? "valid" : "expired",
-        fixtures: this.isCacheValid("fixtures") ? "valid" : "expired",
-        standings: this.isCacheValid("standings") ? "valid" : "expired",
-      },
-    };
-  }
-
-  // Test method for individual endpoints
-  async testEndpoint(type) {
-    console.log(`🧪 Testing ${type} endpoint...`);
-    console.log("=".repeat(50));
-
+  // Force refresh all data from scraping sources
+  async forceRefreshAll() {
     try {
-      // Clear cache for this type
-      if (type === "players") {
+      console.log("🔄 Triggering force refresh of all football data");
+
+      const response = await fetch(ENDPOINTS.refresh, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log("✅ Force refresh initiated successfully");
+        // Clear client cache to force fresh fetch
         this.playersData = null;
-        this.playersLastFetch = null;
-      } else if (type === "fixtures") {
         this.fixturesData = null;
-        this.fixturesLastFetch = null;
-      } else if (type === "standings") {
         this.standingsData = null;
+        this.playersLastFetch = null;
+        this.fixturesLastFetch = null;
         this.standingsLastFetch = null;
+
+        return result;
+      } else {
+        throw new Error(result.message || "Force refresh failed");
       }
-
-      const startTime = Date.now();
-      let result;
-
-      switch (type) {
-        case "players":
-          result = await this.fetchPlayersData();
-          break;
-        case "fixtures":
-          result = await this.fetchFixturesData();
-          break;
-        case "standings":
-          result = await this.fetchStandingsData();
-          break;
-        default:
-          throw new Error(`Unknown endpoint type: ${type}`);
-      }
-
-      const endTime = Date.now();
-
-      console.log("=".repeat(50));
-      console.log(`🧪 ${type.toUpperCase()} TEST RESULTS:`);
-      console.log(`⏱️ Total time: ${endTime - startTime}ms`);
-      console.log(`📊 Data source: ${result.source}`);
-      console.log(`🔄 Is live data: ${result.isLive}`);
-      console.log(
-        `📅 Last updated: ${new Date(
-          result.lastUpdated || Date.now()
-        ).toISOString()}`
-      );
-
-      if (type === "players" && result.squad) {
-        console.log(`👥 Squad size: ${result.squad.length} players`);
-        if (result.squad.length > 0) {
-          console.log("👥 Sample players:");
-          result.squad.slice(0, 3).forEach((player) => {
-            console.log(`   - ${player.name} (${player.position})`);
-          });
-        }
-      } else if (type === "fixtures" && result.pastFixtures) {
-        console.log(`⚽ Past fixtures: ${result.pastFixtures.length} fixtures`);
-        if (result.pastFixtures.length > 0) {
-          console.log("⚽ Recent fixtures:");
-          result.pastFixtures.slice(0, 2).forEach((fixture) => {
-            console.log(
-              `   - ${fixture.homeTeam} ${fixture.homeScore}-${fixture.awayScore} ${fixture.awayTeam}`
-            );
-          });
-        }
-      } else if (type === "standings" && result.leaguePosition) {
-        console.log(`🏆 League position: ${result.leaguePosition.position}`);
-        console.log(`📊 Points: ${result.leaguePosition.points}`);
-        console.log(
-          `🎯 Record: ${result.leaguePosition.won}W-${result.leaguePosition.drawn}D-${result.leaguePosition.lost}L`
-        );
-      }
-
-      return result;
     } catch (error) {
-      console.error(`❌ ${type} endpoint test failed:`, error);
+      console.error("❌ Error triggering force refresh:", error);
       throw error;
     }
   }
 
-  // Static fallback data (same as before but simplified)
+  // Get cache status for all data types
+  async getCacheStatus() {
+    try {
+      console.log("📊 Getting cache status for all football data");
+
+      const response = await fetch(ENDPOINTS.status);
+      const result = await response.json();
+
+      if (result.success) {
+        console.log("✅ Cache status retrieved:", result.data);
+        return result.data;
+      } else {
+        throw new Error(result.message || "Failed to get cache status");
+      }
+    } catch (error) {
+      console.error("❌ Error getting cache status:", error);
+      throw error;
+    }
+  }
+
+  // Enhanced data status with database info
+  getDataStatus() {
+    const hasAnyData =
+      this.playersData || this.fixturesData || this.standingsData;
+
+    if (!hasAnyData) {
+      return {
+        isLive: false,
+        source: "No data available",
+        message: "Loading data...",
+        lastUpdated: null,
+      };
+    }
+
+    // Determine the most recent source and update time
+    const dataSources = [
+      { type: "players", data: this.playersData },
+      { type: "fixtures", data: this.fixturesData },
+      { type: "standings", data: this.standingsData },
+    ].filter((item) => item.data);
+
+    if (dataSources.length === 0) {
+      return {
+        isLive: false,
+        source: "Static fallback data",
+        message: "Using cached fallback data",
+        lastUpdated: null,
+      };
+    }
+
+    // Get the most recent data source info
+    const mostRecent = dataSources[0];
+    const isLive = mostRecent.data.isLive;
+    const source = mostRecent.data.source || "Database";
+
+    return {
+      isLive,
+      source,
+      message: isLive
+        ? "Data is up to date"
+        : "Data may be updating in background",
+      lastUpdated: mostRecent.data.lastUpdated,
+    };
+  }
+
+  // Get methods for React components (simplified interface)
+  async getSquadData(limit = null) {
+    const data = await this.fetchPlayersData();
+    if (!data || !data.squad) return [];
+    return limit ? data.squad.slice(0, limit) : data.squad;
+  }
+
+  async getPastFixtures(limit = 5) {
+    const data = await this.fetchFixturesData();
+    if (!data || !data.pastFixtures) return [];
+    return data.pastFixtures.slice(0, limit);
+  }
+
+  async getLeaguePosition() {
+    const data = await this.fetchStandingsData();
+    return data?.leaguePosition || null;
+  }
+
+  // Static fallback data (keep existing implementation)
   getStaticData() {
     return {
-      squad: [
-        {
-          id: 1,
-          name: "Jokin Ezkieta",
-          position: "Goalkeeper",
-          age: 28,
-          nationality: "Spain",
-          photo: "/images/players/ezkieta.jpg",
-          number: "1",
-          matches: 42,
-          goals: 0,
-          assists: 0,
+      squadData: {
+        squad: [
+          {
+            id: 1,
+            name: "Jokin Ezkieta",
+            position: "Goalkeeper",
+            age: 27,
+            nationality: "ESP",
+            photo: "/images/players/default.jpg",
+            number: "1",
+            matches: 35,
+            goals: 0,
+            assists: 0,
+          },
+          // Add more static players as needed...
+        ],
+        isLive: false,
+        lastUpdated: null,
+        source: "Static fallback data",
+      },
+      fixturesData: {
+        pastFixtures: [
+          {
+            id: 1,
+            date: "2024-05-26T00:00:00Z",
+            homeTeam: "CD Mirandés",
+            awayTeam: "Racing de Santander",
+            competition: "La Liga 2",
+            round: "Promotion play-offs",
+            venue: "Away",
+            homeScore: 4,
+            awayScore: 1,
+            result: "L",
+          },
+          // Add more static fixtures as needed...
+        ],
+        isLive: false,
+        lastUpdated: null,
+        source: "Static fallback data",
+      },
+      standingsData: {
+        leaguePosition: {
+          position: 5,
+          points: 71,
+          played: 42,
+          won: 20,
+          drawn: 11,
+          lost: 11,
+          goalDifference: 14,
         },
-        {
-          id: 2,
-          name: "Andrés Martín",
-          position: "Midfielder",
-          age: 25,
-          nationality: "Spain",
-          photo: "/images/players/martin.jpg",
-          number: "10",
-          matches: 41,
-          goals: 16,
-          assists: 17,
-        },
-        {
-          id: 3,
-          name: "Iñigo Vicente",
-          position: "Midfielder",
-          age: 27,
-          nationality: "Spain",
-          photo: "/images/players/vicente.jpg",
-          number: "11",
-          matches: 40,
-          goals: 3,
-          assists: 10,
-        },
-        {
-          id: 4,
-          name: "Sory Kaba",
-          position: "Forward",
-          age: 28,
-          nationality: "Guinea",
-          photo: "/images/players/kaba.jpg",
-          number: "9",
-          matches: 35,
-          goals: 12,
-          assists: 2,
-        },
-      ],
-      pastFixtures: [
-        {
-          id: 1,
-          date: "2024-12-08T20:00:00Z",
-          homeTeam: "Racing de Santander",
-          awayTeam: "Mirandés",
-          homeLogo: "/images/racingLogo.png",
-          awayLogo: "/images/mirandes.png",
-          competition: "Segunda División",
-          venue: "El Sardinero",
-          homeScore: 1,
-          awayScore: 4,
-          result: "L",
-        },
-        {
-          id: 2,
-          date: "2024-12-01T18:00:00Z",
-          homeTeam: "Real Valladolid",
-          awayTeam: "Racing de Santander",
-          homeLogo: "/images/valladolid.png",
-          awayLogo: "/images/racingLogo.png",
-          competition: "Segunda División",
-          venue: "José Zorrilla",
-          homeScore: 0,
-          awayScore: 2,
-          result: "W",
-        },
-      ],
-      leaguePosition: {
-        position: 5,
-        points: 71,
-        played: 42,
-        won: 20,
-        drawn: 11,
-        lost: 11,
-        goalDifference: 14,
+        isLive: false,
+        lastUpdated: null,
+        source: "Static fallback data",
       },
     };
   }
 }
 
-// Enhanced React hook with individual loading states
+// Enhanced React hook with instant loading and async updates
 export const useFootballData = () => {
-  const [api] = useState(() => new RacingFootballDataV2());
+  const [api] = useState(() => new RacingFootballDataV3());
 
   // Separate loading states for each data type
   const [playersLoading, setPlayersLoading] = useState(false);
@@ -429,12 +426,31 @@ export const useFootballData = () => {
   // Overall data status
   const [dataStatus, setDataStatus] = useState(null);
 
+  // Cache status from server
+  const [cacheStatus, setCacheStatus] = useState(null);
+
   // Update data status periodically
   useEffect(() => {
     const updateStatus = () => setDataStatus(api.getDataStatus());
     updateStatus();
 
     const interval = setInterval(updateStatus, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, [api]);
+
+  // Get cache status periodically
+  useEffect(() => {
+    const updateCacheStatus = async () => {
+      try {
+        const status = await api.getCacheStatus();
+        setCacheStatus(status);
+      } catch (error) {
+        console.error("Failed to get cache status:", error);
+      }
+    };
+
+    updateCacheStatus();
+    const interval = setInterval(updateCacheStatus, 60000); // Update every minute
     return () => clearInterval(interval);
   }, [api]);
 
@@ -456,25 +472,21 @@ export const useFootballData = () => {
   };
 
   return {
-    // Individual data fetchers with their own loading states
-    getSquadData: () =>
+    // Individual data with instant loading
+    getSquadData: (limit) =>
       fetchWithState(
-        () => api.getSquadData(),
+        () => api.getSquadData(limit),
         setPlayersLoading,
         setPlayersError
       ),
+
     getPastFixtures: (limit) =>
       fetchWithState(
         () => api.getPastFixtures(limit),
         setFixturesLoading,
         setFixturesError
       ),
-    getUpcomingFixtures: (limit) =>
-      fetchWithState(
-        () => api.getUpcomingFixtures(limit),
-        setFixturesLoading,
-        setFixturesError
-      ),
+
     getLeaguePosition: () =>
       fetchWithState(
         () => api.getLeaguePosition(),
@@ -482,50 +494,51 @@ export const useFootballData = () => {
         setStandingsError
       ),
 
-    // Individual loading states
+    // Force refresh functionality
+    forceRefreshAll: () =>
+      fetchWithState(
+        () => api.forceRefreshAll(),
+        setPlayersLoading, // Use players loading for simplicity
+        setPlayersError
+      ),
+
+    // Get cache status
+    getCacheStatus: () => api.getCacheStatus(),
+
+    // Loading states
     playersLoading,
     fixturesLoading,
     standingsLoading,
-    loading: playersLoading || fixturesLoading || standingsLoading, // Overall loading
 
-    // Individual error states
+    // Error states
     playersError,
     fixturesError,
     standingsError,
-    error: playersError || fixturesError || standingsError, // Overall error
 
-    // Data status and testing
+    // Overall status
     dataStatus,
-    api,
+    cacheStatus,
 
-    // Test functions for each endpoint
-    testPlayersAPI: () => api.testEndpoint("players"),
-    testFixturesAPI: () => api.testEndpoint("fixtures"),
-    testStandingsAPI: () => api.testEndpoint("standings"),
+    // Force update methods (bypass client cache)
+    forceUpdatePlayers: () =>
+      fetchWithState(
+        () => api.fetchPlayersData(true),
+        setPlayersLoading,
+        setPlayersError
+      ),
 
-    // Legacy test function (now tests all endpoints)
-    testBackendAPI: async () => {
-      console.log("🧪 TESTING ALL NEW ENDPOINTS...");
-      console.log("=".repeat(60));
+    forceUpdateFixtures: () =>
+      fetchWithState(
+        () => api.fetchFixturesData(true),
+        setFixturesLoading,
+        setFixturesError
+      ),
 
-      const results = {};
-
-      try {
-        results.players = await api.testEndpoint("players");
-        results.fixtures = await api.testEndpoint("fixtures");
-        results.standings = await api.testEndpoint("standings");
-
-        console.log("=".repeat(60));
-        console.log("🎉 ALL ENDPOINT TESTS COMPLETED SUCCESSFULLY!");
-        console.log("✅ Players endpoint: OK");
-        console.log("✅ Fixtures endpoint: OK");
-        console.log("✅ Standings endpoint: OK");
-
-        return results;
-      } catch (error) {
-        console.error("❌ One or more endpoint tests failed:", error);
-        throw error;
-      }
-    },
+    forceUpdateStandings: () =>
+      fetchWithState(
+        () => api.fetchStandingsData(true),
+        setStandingsLoading,
+        setStandingsError
+      ),
   };
 };
