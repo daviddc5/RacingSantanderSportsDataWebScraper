@@ -4,7 +4,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Squad from "./pages/Squad";
 import History from "./pages/History";
-import ApiTest from "./components/ApiTest";
+
 import "./App.css";
 
 function App() {
@@ -17,7 +17,6 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/squad" element={<Squad />} />
             <Route path="/history" element={<History />} />
-            <Route path="/api-test" element={<ApiTest />} />
           </Routes>
         </main>
         <Footer />

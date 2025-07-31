@@ -58,15 +58,6 @@ const Header = () => {
                 HISTORY
               </Link>
             </li>
-            <li>
-              <Link
-                to="/api-test"
-                className={isActive("/api-test") ? "active" : ""}
-                onClick={closeMenu}
-              >
-                API TEST
-              </Link>
-            </li>
           </ul>
         </nav>
 
