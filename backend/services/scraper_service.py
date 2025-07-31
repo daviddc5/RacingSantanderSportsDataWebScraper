@@ -568,7 +568,18 @@ class FBrefScraperService:
                         continue
                     
                     date = date_cell.get_text(strip=True)
-                    opponent = opponent_cell.get_text(strip=True)
+                    
+                    # Extract opponent name and team ID from the link
+                    opponent_link = opponent_cell.find('a')
+                    if opponent_link:
+                        opponent = opponent_link.get_text(strip=True)
+                        opponent_href = opponent_link.get('href', '')
+                        # Extract team ID from href like: /en/squads/3640715c/CD-Mirandes-Stats
+                        opponent_id_match = re.search(r'/en/squads/([a-f0-9]+)/', opponent_href)
+                        opponent_team_id = opponent_id_match.group(1) if opponent_id_match else None
+                    else:
+                        opponent = opponent_cell.get_text(strip=True)
+                        opponent_team_id = None
                     
                     # Parse scores
                     goals_for = None
@@ -590,17 +601,30 @@ class FBrefScraperService:
                         venue = venue_cell.get_text(strip=True) if venue_cell else ""
                         is_racing_home = venue.lower() == "home"
                         
-                        # Set team names based on venue
+                        # Set team names and logos based on venue
+                        racing_team_id = "dee3bbc8"  # Racing Santander's team ID from their URL
+                        racing_logo_url = f"https://cdn.ssref.net/req/202507211/tlogo/fb/{racing_team_id}.png"
+                        
+                        if opponent_team_id:
+                            opponent_logo_url = f"https://cdn.ssref.net/req/202507211/tlogo/fb/{opponent_team_id}.png"
+                        else:
+                            # Fallback to placeholder if team ID not found
+                            opponent_logo_url = f"/images/{opponent.lower().replace(' ', '').replace('de', '').replace('ñ', 'n')}.png"
+                        
                         if is_racing_home:
                             home_team = "Racing de Santander"
                             away_team = opponent
                             home_score = goals_for
                             away_score = goals_against
+                            home_logo = racing_logo_url
+                            away_logo = opponent_logo_url
                         else:
                             home_team = opponent
                             away_team = "Racing de Santander"
                             home_score = goals_against
                             away_score = goals_for
+                            home_logo = opponent_logo_url
+                            away_logo = racing_logo_url
                         
                         # Get additional data
                         competition = competition_cell.get_text(strip=True) if competition_cell else "Segunda División"
@@ -615,8 +639,8 @@ class FBrefScraperService:
                             "date": self.parse_date(date),
                             "homeTeam": home_team,
                             "awayTeam": away_team,
-                            "homeLogo": f"/images/{home_team.lower().replace(' ', '').replace('de', '')}.png",
-                            "awayLogo": f"/images/{away_team.lower().replace(' ', '').replace('de', '')}.png",
+                            "homeLogo": home_logo,
+                            "awayLogo": away_logo,
                             "competition": competition,
                             "round": round_info,
                             "venue": "El Sardinero" if is_racing_home else "Away",
@@ -639,6 +663,8 @@ class FBrefScraperService:
                 logger.info("⚽ Sample fixtures found:")
                 for fixture in fixtures:
                     logger.info(f"   - {fixture['homeTeam']} {fixture['homeScore']}-{fixture['awayScore']} {fixture['awayTeam']} ({fixture['result']})")
+                    logger.info(f"     Home Logo: {fixture['homeLogo']}")
+                    logger.info(f"     Away Logo: {fixture['awayLogo']}")
             
             return fixtures
             
@@ -851,43 +877,52 @@ class FBrefScraperService:
             "pastFixtures": [
                 {
                     "id": 1,
-                    "date": "2024-12-08T20:00:00Z",
-                    "homeTeam": "Racing de Santander",
-                    "awayTeam": "Mirandés",
-                    "homeLogo": "/images/racingLogo.png",
-                    "awayLogo": "/images/mirandes.png",
-                    "competition": "Segunda División",
-                    "venue": "El Sardinero",
-                    "homeScore": 1,
-                    "awayScore": 4,
+                    "date": "2025-06-12T20:00:00Z",
+                    "homeTeam": "CD Mirandés",
+                    "awayTeam": "Racing de Santander",
+                    "homeLogo": "https://cdn.ssref.net/req/202507211/tlogo/fb/3640715c.png",
+                    "awayLogo": "https://cdn.ssref.net/req/202507211/tlogo/fb/dee3bbc8.png",
+                    "competition": "La Liga 2",
+                    "round": "Promotion play-offs — Semi-finals",
+                    "venue": "Away",
+                    "homeScore": 4,
+                    "awayScore": 1,
                     "result": "L",
+                    "attendance": "5,345",
+                    "referee": "José Guzmán",
                 },
                 {
                     "id": 2,
-                    "date": "2024-12-01T18:00:00Z",
-                    "homeTeam": "Real Valladolid",
-                    "awayTeam": "Racing de Santander",
-                    "homeLogo": "/images/valladolid.png",
-                    "awayLogo": "/images/racingLogo.png",
-                    "competition": "Segunda División",
-                    "venue": "José Zorrilla",
-                    "homeScore": 0,
-                    "awayScore": 2,
-                    "result": "W",
+                    "date": "2025-06-08T18:30:00Z",
+                    "homeTeam": "Racing de Santander",
+                    "awayTeam": "CD Mirandés",
+                    "homeLogo": "https://cdn.ssref.net/req/202507211/tlogo/fb/dee3bbc8.png",
+                    "awayLogo": "https://cdn.ssref.net/req/202507211/tlogo/fb/3640715c.png",
+                    "competition": "La Liga 2",
+                    "round": "Promotion play-offs — Semi-finals",
+                    "venue": "El Sardinero",
+                    "homeScore": 3,
+                    "awayScore": 3,
+                    "result": "D",
+                    "attendance": "22,394",
+                    "referee": "Rafael Sánchez",
                 },
                 {
                     "id": 3,
-                    "date": "2024-11-24T20:00:00Z",
+                    "date": "2025-06-01T18:30:00Z",
                     "homeTeam": "Racing de Santander",
-                    "awayTeam": "CD Leganés",
-                    "homeLogo": "/images/racingLogo.png",
-                    "awayLogo": "/images/leganes.png",
-                    "competition": "Segunda División",
+                    "awayTeam": "Granada",
+                    "homeLogo": "https://cdn.ssref.net/req/202507211/tlogo/fb/dee3bbc8.png",
+                    "awayLogo": "https://cdn.ssref.net/req/202507211/tlogo/fb/a0435291.png",
+                    "competition": "La Liga 2",
+                    "round": "Matchweek 42",
                     "venue": "El Sardinero",
                     "homeScore": 2,
                     "awayScore": 1,
                     "result": "W",
-                },
+                    "attendance": "22,298",
+                    "referee": "Dámaso Arcediano",
+                }
             ],
             "leaguePosition": {
                 "position": 5,
