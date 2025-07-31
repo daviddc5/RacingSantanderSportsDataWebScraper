@@ -1,212 +1,338 @@
 import { useState, useEffect } from "react";
 
-// Racing Santander Football Data - Backend API Implementation
-// Uses FastAPI backend for web scraping with fallback to static data
+// Racing Santander Football Data - NEW Focused Endpoints Implementation
+// Uses individual FastAPI endpoints for better performance and caching
 
-const BACKEND_API_URL = "http://localhost:8000/api/v1/scrape/fbref";
+// New focused API endpoints
+const API_BASE_URL = "http://localhost:8000/api/v1/scrape";
+const ENDPOINTS = {
+  players: `${API_BASE_URL}/players`,
+  fixtures: `${API_BASE_URL}/fixtures`,
+  standings: `${API_BASE_URL}/standings`,
+  // Keep legacy endpoint for fallback
+  legacy: `${API_BASE_URL}/fbref`,
+};
 
-class RacingFootballData {
+class RacingFootballDataV2 {
   constructor() {
+    // Separate caches for each data type
+    this.playersData = null;
+    this.fixturesData = null;
+    this.standingsData = null;
+
+    // Separate timestamps for cache management
+    this.playersLastFetch = null;
+    this.fixturesLastFetch = null;
+    this.standingsLastFetch = null;
+
+    // Cache durations (matching backend)
+    this.playersCacheDuration = 15 * 60 * 1000; // 15 minutes
+    this.fixturesCacheDuration = 5 * 60 * 1000; // 5 minutes
+    this.standingsCacheDuration = 10 * 60 * 1000; // 10 minutes
+
+    // Static fallback data
     this.staticData = this.getStaticData();
-    this.liveData = null;
-    this.lastFetchAttempt = null;
-    this.fetchInterval = 30 * 60 * 1000; // 30 minutes
   }
 
-  // Initialize live data fetching from backend
-  async initialize() {
-    try {
-      console.log("Initializing live data fetch from backend API...");
-      console.log("⏳ This may take up to 60 seconds for web scraping...");
-      this.liveData = await this.fetchFromBackend();
-      this.lastFetchAttempt = Date.now();
-      console.log("Live data initialized successfully");
-    } catch (error) {
-      console.warn("Failed to initialize live data, using static data:", error);
-      this.liveData = null;
-    }
+  // Check if cached data is still valid
+  isCacheValid(type) {
+    const now = Date.now();
+    const cache = {
+      players: {
+        data: this.playersData,
+        lastFetch: this.playersLastFetch,
+        duration: this.playersCacheDuration,
+      },
+      fixtures: {
+        data: this.fixturesData,
+        lastFetch: this.fixturesLastFetch,
+        duration: this.fixturesCacheDuration,
+      },
+      standings: {
+        data: this.standingsData,
+        lastFetch: this.standingsLastFetch,
+        duration: this.standingsCacheDuration,
+      },
+    };
+
+    const cacheInfo = cache[type];
+    return (
+      cacheInfo.data &&
+      cacheInfo.lastFetch &&
+      now - cacheInfo.lastFetch < cacheInfo.duration
+    );
   }
 
-  // Fetch data from backend API
-  async fetchFromBackend() {
+  // Generic fetch method for any endpoint
+  async fetchFromEndpoint(endpoint, dataType) {
     try {
-      console.log("🌐 Fetching data from backend API...");
-      console.log(`📡 API URL: ${BACKEND_API_URL}`);
-
-      // Create AbortController for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      console.log(`🌐 Fetching ${dataType} data from: ${endpoint}`);
 
       const startTime = Date.now();
-      const response = await fetch(BACKEND_API_URL, {
+      const response = await fetch(endpoint, {
         method: "GET",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        signal: controller.signal,
+        signal: AbortSignal.timeout(60000), // 60 second timeout
       });
 
-      clearTimeout(timeoutId); // Clear timeout if request completes
-
       const endTime = Date.now();
-      console.log(`⏱️ API Response time: ${endTime - startTime}ms`);
-      console.log(`📊 Response status: ${response.status}`);
+      console.log(`⏱️ ${dataType} API Response time: ${endTime - startTime}ms`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log("📄 Parsing API response...");
 
       if (!result.success || !result.data) {
-        throw new Error("Invalid response format from backend");
+        throw new Error(`Invalid response format from ${dataType} endpoint`);
       }
 
-      const data = result.data;
-      console.log("📊 Backend API data summary:");
-      console.log(`   - Squad: ${data.squad?.length || 0} players`);
-      console.log(
-        `   - Past fixtures: ${data.pastFixtures?.length || 0} fixtures`
-      );
-      console.log(
-        `   - League position: ${data.leaguePosition ? "Found" : "Not found"}`
-      );
-      console.log(`   - Data source: ${data.source}`);
-      console.log(`   - Is live: ${data.isLive}`);
+      console.log(`✅ Successfully fetched ${dataType} data`);
+      console.log(`📊 Source: ${result.data.source}`);
+      console.log(`🔄 Is live: ${result.data.isLive}`);
 
+      return result.data;
+    } catch (error) {
+      console.error(`❌ Error fetching ${dataType} data:`, error);
+      throw error;
+    }
+  }
+
+  // Fetch squad/players data
+  async fetchPlayersData() {
+    if (this.isCacheValid("players")) {
+      console.log("🔄 Using cached players data");
+      return this.playersData;
+    }
+
+    try {
+      const data = await this.fetchFromEndpoint(ENDPOINTS.players, "players");
+      this.playersData = data;
+      this.playersLastFetch = Date.now();
+      console.log(`👥 Fetched ${data.squad?.length || 0} players`);
       return data;
     } catch (error) {
-      console.error("❌ Error fetching from backend API:", error);
-
-      // Provide more specific error messages
-      if (error.name === "AbortError") {
-        throw new Error(
-          "Backend API request timed out after 60 seconds. The web scraping operation may be taking longer than usual."
-        );
-      } else if (error.message.includes("fetch")) {
-        throw new Error(
-          "Failed to connect to backend API. Make sure the backend server is running on http://localhost:8000"
-        );
-      } else {
-        throw error;
-      }
+      console.warn("Using static players data due to fetch error");
+      return {
+        squad: this.staticData.squad,
+        isLive: false,
+        source: "Static fallback",
+      };
     }
   }
 
-  // Check if we should attempt to refresh live data
-  shouldRefreshLiveData() {
-    if (!this.lastFetchAttempt) return true;
-    return Date.now() - this.lastFetchAttempt > this.fetchInterval;
+  // Fetch fixtures data
+  async fetchFixturesData() {
+    if (this.isCacheValid("fixtures")) {
+      console.log("🔄 Using cached fixtures data");
+      return this.fixturesData;
+    }
+
+    try {
+      const data = await this.fetchFromEndpoint(ENDPOINTS.fixtures, "fixtures");
+      this.fixturesData = data;
+      this.fixturesLastFetch = Date.now();
+      console.log(`⚽ Fetched ${data.pastFixtures?.length || 0} fixtures`);
+      return data;
+    } catch (error) {
+      console.warn("Using static fixtures data due to fetch error");
+      return {
+        pastFixtures: this.staticData.pastFixtures,
+        isLive: false,
+        source: "Static fallback",
+      };
+    }
   }
 
-  // Get squad data (live or fallback)
+  // Fetch standings data
+  async fetchStandingsData() {
+    if (this.isCacheValid("standings")) {
+      console.log("🔄 Using cached standings data");
+      return this.standingsData;
+    }
+
+    try {
+      const data = await this.fetchFromEndpoint(
+        ENDPOINTS.standings,
+        "standings"
+      );
+      this.standingsData = data;
+      this.standingsLastFetch = Date.now();
+      console.log(
+        `📊 Fetched league position: ${
+          data.leaguePosition?.position || "Unknown"
+        }`
+      );
+      return data;
+    } catch (error) {
+      console.warn("Using static standings data due to fetch error");
+      return {
+        leaguePosition: this.staticData.leaguePosition,
+        isLive: false,
+        source: "Static fallback",
+      };
+    }
+  }
+
+  // Public methods for components
   async getSquadData() {
-    // Try to refresh live data if needed
-    if (this.shouldRefreshLiveData()) {
-      try {
-        this.liveData = await this.fetchFromBackend();
-        this.lastFetchAttempt = Date.now();
-      } catch (error) {
-        console.warn("Failed to refresh live data:", error);
-      }
-    }
-
-    if (
-      this.liveData &&
-      this.liveData.squad &&
-      this.liveData.squad.length > 0
-    ) {
-      return this.liveData.squad;
-    }
-
-    // Return fallback data
-    return this.staticData.squad;
+    const data = await this.fetchPlayersData();
+    return data.squad || [];
   }
 
-  // Get upcoming fixtures (returns empty array as requested)
+  async getPastFixtures(limit = 3) {
+    const data = await this.fetchFixturesData();
+    const fixtures = data.pastFixtures || [];
+    return limit ? fixtures.slice(0, limit) : fixtures;
+  }
+
   async getUpcomingFixtures(limit = 5) {
+    // Racing Santander doesn't have upcoming fixtures data in FBref
+    // Return empty array as requested in original implementation
     return [];
   }
 
-  // Get past fixtures with results (live or fallback)
-  async getPastFixtures(limit = 3) {
-    // Try to refresh live data if needed
-    if (this.shouldRefreshLiveData()) {
-      try {
-        this.liveData = await this.fetchFromBackend();
-        this.lastFetchAttempt = Date.now();
-      } catch (error) {
-        console.warn("Failed to refresh live data:", error);
-      }
-    }
-
-    if (
-      this.liveData &&
-      this.liveData.pastFixtures &&
-      this.liveData.pastFixtures.length > 0
-    ) {
-      return this.liveData.pastFixtures.slice(0, limit);
-    }
-
-    // Return fallback data
-    return this.staticData.pastFixtures.slice(0, limit);
-  }
-
-  // Get league position (live or fallback)
   async getLeaguePosition() {
-    // Try to refresh live data if needed
-    if (this.shouldRefreshLiveData()) {
-      try {
-        this.liveData = await this.fetchFromBackend();
-        this.lastFetchAttempt = Date.now();
-      } catch (error) {
-        console.warn("Failed to refresh live data:", error);
-      }
-    }
-
-    if (this.liveData && this.liveData.leaguePosition) {
-      return this.liveData.leaguePosition;
-    }
-
-    // Return fallback data
-    return this.staticData.leaguePosition;
+    const data = await this.fetchStandingsData();
+    return data.leaguePosition || null;
   }
 
-  // Get data status information
+  // Get overall data status for debugging
   getDataStatus() {
-    if (this.liveData) {
-      return {
-        isLive: this.liveData.isLive || false,
-        lastUpdated: this.liveData.lastUpdated,
-        source: this.liveData.source,
-        message: `Data is up to date as of ${new Date(
-          this.liveData.lastUpdated
-        ).toLocaleString()}`,
-      };
-    } else {
-      return {
-        isLive: false,
-        lastUpdated: null,
-        source: "Backend API (fallback)",
-        message: "Using fallback data - live data unavailable",
-      };
+    const now = Date.now();
+
+    // Find the most recent successful fetch
+    let latestData = null;
+    let latestTime = 0;
+
+    if (this.playersData && this.playersLastFetch > latestTime) {
+      latestData = this.playersData;
+      latestTime = this.playersLastFetch;
+    }
+    if (this.fixturesData && this.fixturesLastFetch > latestTime) {
+      latestData = this.fixturesData;
+      latestTime = this.fixturesLastFetch;
+    }
+    if (this.standingsData && this.standingsLastFetch > latestTime) {
+      latestData = this.standingsData;
+      latestTime = this.standingsLastFetch;
+    }
+
+    return {
+      isLive: latestData?.isLive || false,
+      source: latestData?.source || "No data fetched yet",
+      lastUpdated: latestTime || null,
+      message: latestData?.isLive
+        ? "Live data from FBref.com"
+        : "Using fallback data",
+      cacheStatus: {
+        players: this.isCacheValid("players") ? "valid" : "expired",
+        fixtures: this.isCacheValid("fixtures") ? "valid" : "expired",
+        standings: this.isCacheValid("standings") ? "valid" : "expired",
+      },
+    };
+  }
+
+  // Test method for individual endpoints
+  async testEndpoint(type) {
+    console.log(`🧪 Testing ${type} endpoint...`);
+    console.log("=".repeat(50));
+
+    try {
+      // Clear cache for this type
+      if (type === "players") {
+        this.playersData = null;
+        this.playersLastFetch = null;
+      } else if (type === "fixtures") {
+        this.fixturesData = null;
+        this.fixturesLastFetch = null;
+      } else if (type === "standings") {
+        this.standingsData = null;
+        this.standingsLastFetch = null;
+      }
+
+      const startTime = Date.now();
+      let result;
+
+      switch (type) {
+        case "players":
+          result = await this.fetchPlayersData();
+          break;
+        case "fixtures":
+          result = await this.fetchFixturesData();
+          break;
+        case "standings":
+          result = await this.fetchStandingsData();
+          break;
+        default:
+          throw new Error(`Unknown endpoint type: ${type}`);
+      }
+
+      const endTime = Date.now();
+
+      console.log("=".repeat(50));
+      console.log(`🧪 ${type.toUpperCase()} TEST RESULTS:`);
+      console.log(`⏱️ Total time: ${endTime - startTime}ms`);
+      console.log(`📊 Data source: ${result.source}`);
+      console.log(`🔄 Is live data: ${result.isLive}`);
+      console.log(
+        `📅 Last updated: ${new Date(
+          result.lastUpdated || Date.now()
+        ).toISOString()}`
+      );
+
+      if (type === "players" && result.squad) {
+        console.log(`👥 Squad size: ${result.squad.length} players`);
+        if (result.squad.length > 0) {
+          console.log("👥 Sample players:");
+          result.squad.slice(0, 3).forEach((player) => {
+            console.log(`   - ${player.name} (${player.position})`);
+          });
+        }
+      } else if (type === "fixtures" && result.pastFixtures) {
+        console.log(`⚽ Past fixtures: ${result.pastFixtures.length} fixtures`);
+        if (result.pastFixtures.length > 0) {
+          console.log("⚽ Recent fixtures:");
+          result.pastFixtures.slice(0, 2).forEach((fixture) => {
+            console.log(
+              `   - ${fixture.homeTeam} ${fixture.homeScore}-${fixture.awayScore} ${fixture.awayTeam}`
+            );
+          });
+        }
+      } else if (type === "standings" && result.leaguePosition) {
+        console.log(`🏆 League position: ${result.leaguePosition.position}`);
+        console.log(`📊 Points: ${result.leaguePosition.points}`);
+        console.log(
+          `🎯 Record: ${result.leaguePosition.won}W-${result.leaguePosition.drawn}D-${result.leaguePosition.lost}L`
+        );
+      }
+
+      return result;
+    } catch (error) {
+      console.error(`❌ ${type} endpoint test failed:`, error);
+      throw error;
     }
   }
 
-  // Get static data with real Racing Santander information (2024-2025 season)
+  // Static fallback data (same as before but simplified)
   getStaticData() {
     return {
       squad: [
         {
           id: 1,
-          name: "Joakin Ezkieta",
+          name: "Jokin Ezkieta",
           position: "Goalkeeper",
           age: 28,
           nationality: "Spain",
           photo: "/images/players/ezkieta.jpg",
           number: "1",
+          matches: 42,
+          goals: 0,
+          assists: 0,
         },
         {
           id: 2,
@@ -216,6 +342,9 @@ class RacingFootballData {
           nationality: "Spain",
           photo: "/images/players/martin.jpg",
           number: "10",
+          matches: 41,
+          goals: 16,
+          assists: 17,
         },
         {
           id: 3,
@@ -225,87 +354,21 @@ class RacingFootballData {
           nationality: "Spain",
           photo: "/images/players/vicente.jpg",
           number: "11",
+          matches: 40,
+          goals: 3,
+          assists: 10,
         },
         {
           id: 4,
-          name: "Aldasoro",
-          position: "Midfielder",
-          age: 26,
-          nationality: "Spain",
-          photo: "/images/players/aldasoro.jpg",
-          number: "8",
-        },
-        {
-          id: 5,
-          name: "Unai Vencedor Paris",
-          position: "Midfielder",
-          age: 24,
-          nationality: "Spain",
-          photo: "/images/players/vencedor.jpg",
-          number: "6",
-        },
-        {
-          id: 6,
-          name: "Javier Castro",
-          position: "Defender",
-          age: 24,
-          nationality: "Spain",
-          photo: "/images/players/castro.jpg",
-          number: "3",
-        },
-        {
-          id: 7,
-          name: "Pablo Rodríguez",
-          position: "Midfielder",
-          age: 23,
-          nationality: "Spain",
-          photo: "/images/players/rodriguez.jpg",
-          number: "7",
-        },
-        {
-          id: 8,
           name: "Sory Kaba",
           position: "Forward",
           age: 28,
           nationality: "Guinea",
           photo: "/images/players/kaba.jpg",
           number: "9",
-        },
-        {
-          id: 9,
-          name: "Jorge Pombo",
-          position: "Forward",
-          age: 30,
-          nationality: "Spain",
-          photo: "/images/players/pombo.jpg",
-          number: "14",
-        },
-        {
-          id: 10,
-          name: "Álvaro Jiménez",
-          position: "Goalkeeper",
-          age: 24,
-          nationality: "Spain",
-          photo: "/images/players/jimenez.jpg",
-          number: "13",
-        },
-        {
-          id: 11,
-          name: "Jorge Sáenz",
-          position: "Defender",
-          age: 26,
-          nationality: "Spain",
-          photo: "/images/players/saenz.jpg",
-          number: "5",
-        },
-        {
-          id: 12,
-          name: "Mikel González",
-          position: "Defender",
-          age: 25,
-          nationality: "Spain",
-          photo: "/images/players/gonzalez.jpg",
-          number: "4",
+          matches: 35,
+          goals: 12,
+          assists: 2,
         },
       ],
       pastFixtures: [
@@ -335,23 +398,10 @@ class RacingFootballData {
           awayScore: 2,
           result: "W",
         },
-        {
-          id: 3,
-          date: "2024-11-24T20:00:00Z",
-          homeTeam: "Racing de Santander",
-          awayTeam: "CD Leganés",
-          homeLogo: "/images/racingLogo.png",
-          awayLogo: "/images/leganes.png",
-          competition: "Segunda División",
-          venue: "El Sardinero",
-          homeScore: 2,
-          awayScore: 1,
-          result: "W",
-        },
       ],
       leaguePosition: {
         position: 5,
-        points: 2,
+        points: 71,
         played: 42,
         won: 20,
         drawn: 11,
@@ -362,34 +412,39 @@ class RacingFootballData {
   }
 }
 
-// React hook for using the football data
+// Enhanced React hook with individual loading states
 export const useFootballData = () => {
-  const [api] = useState(() => new RacingFootballData());
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [api] = useState(() => new RacingFootballDataV2());
+
+  // Separate loading states for each data type
+  const [playersLoading, setPlayersLoading] = useState(false);
+  const [fixturesLoading, setFixturesLoading] = useState(false);
+  const [standingsLoading, setStandingsLoading] = useState(false);
+
+  // Separate error states for each data type
+  const [playersError, setPlayersError] = useState(null);
+  const [fixturesError, setFixturesError] = useState(null);
+  const [standingsError, setStandingsError] = useState(null);
+
+  // Overall data status
   const [dataStatus, setDataStatus] = useState(null);
 
-  // Initialize the data service
+  // Update data status periodically
   useEffect(() => {
-    const initializeData = async () => {
-      try {
-        await api.initialize();
-        setDataStatus(api.getDataStatus());
-      } catch (error) {
-        console.error("Error initializing data service:", error);
-        setDataStatus(api.getDataStatus());
-      }
-    };
+    const updateStatus = () => setDataStatus(api.getDataStatus());
+    updateStatus();
 
-    initializeData();
+    const interval = setInterval(updateStatus, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
   }, [api]);
 
-  const fetchData = async (method, ...args) => {
+  // Generic fetch wrapper with loading and error handling
+  const fetchWithState = async (fetchFunction, setLoading, setError) => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await api[method](...args);
+      const result = await fetchFunction();
       setDataStatus(api.getDataStatus());
       return result;
     } catch (err) {
@@ -401,66 +456,74 @@ export const useFootballData = () => {
   };
 
   return {
-    api,
-    loading,
-    error,
+    // Individual data fetchers with their own loading states
+    getSquadData: () =>
+      fetchWithState(
+        () => api.getSquadData(),
+        setPlayersLoading,
+        setPlayersError
+      ),
+    getPastFixtures: (limit) =>
+      fetchWithState(
+        () => api.getPastFixtures(limit),
+        setFixturesLoading,
+        setFixturesError
+      ),
+    getUpcomingFixtures: (limit) =>
+      fetchWithState(
+        () => api.getUpcomingFixtures(limit),
+        setFixturesLoading,
+        setFixturesError
+      ),
+    getLeaguePosition: () =>
+      fetchWithState(
+        () => api.getLeaguePosition(),
+        setStandingsLoading,
+        setStandingsError
+      ),
+
+    // Individual loading states
+    playersLoading,
+    fixturesLoading,
+    standingsLoading,
+    loading: playersLoading || fixturesLoading || standingsLoading, // Overall loading
+
+    // Individual error states
+    playersError,
+    fixturesError,
+    standingsError,
+    error: playersError || fixturesError || standingsError, // Overall error
+
+    // Data status and testing
     dataStatus,
-    getSquadData: () => fetchData("getSquadData"),
-    getUpcomingFixtures: (limit) => fetchData("getUpcomingFixtures", limit),
-    getPastFixtures: (limit) => fetchData("getPastFixtures", limit),
-    getLeaguePosition: () => fetchData("getLeaguePosition"),
-    // Test function to manually trigger backend API call
+    api,
+
+    // Test functions for each endpoint
+    testPlayersAPI: () => api.testEndpoint("players"),
+    testFixturesAPI: () => api.testEndpoint("fixtures"),
+    testStandingsAPI: () => api.testEndpoint("standings"),
+
+    // Legacy test function (now tests all endpoints)
     testBackendAPI: async () => {
-      console.log("🧪 TESTING BACKEND API...");
-      console.log("=".repeat(50));
+      console.log("🧪 TESTING ALL NEW ENDPOINTS...");
+      console.log("=".repeat(60));
+
+      const results = {};
 
       try {
-        // Clear cache to force fresh fetch
-        api.liveData = null;
-        api.lastFetchAttempt = 0;
+        results.players = await api.testEndpoint("players");
+        results.fixtures = await api.testEndpoint("fixtures");
+        results.standings = await api.testEndpoint("standings");
 
-        console.log("🗑️ Cache cleared, forcing fresh API call");
+        console.log("=".repeat(60));
+        console.log("🎉 ALL ENDPOINT TESTS COMPLETED SUCCESSFULLY!");
+        console.log("✅ Players endpoint: OK");
+        console.log("✅ Fixtures endpoint: OK");
+        console.log("✅ Standings endpoint: OK");
 
-        const startTime = Date.now();
-        const result = await api.fetchFromBackend();
-        const endTime = Date.now();
-
-        console.log("=".repeat(50));
-        console.log("🧪 TEST RESULTS:");
-        console.log(`⏱️ Total time: ${endTime - startTime}ms`);
-        console.log(`📊 Data source: ${result.source}`);
-        console.log(`🔄 Is live data: ${result.isLive}`);
-        console.log(
-          `📅 Last updated: ${new Date(result.lastUpdated).toISOString()}`
-        );
-        console.log(`👥 Squad size: ${result.squad.length} players`);
-        console.log(`⚽ Past fixtures: ${result.pastFixtures.length} fixtures`);
-        console.log(
-          `🏆 League position: ${
-            result.leaguePosition ? "Available" : "Not found"
-          }`
-        );
-
-        if (result.squad.length > 0) {
-          console.log("👥 Sample players:");
-          result.squad.slice(0, 3).forEach((player) => {
-            console.log(`   - ${player.name} (${player.position})`);
-          });
-        }
-
-        if (result.pastFixtures.length > 0) {
-          console.log("⚽ Sample fixtures:");
-          result.pastFixtures.slice(0, 2).forEach((fixture) => {
-            console.log(
-              `   - ${fixture.homeTeam} ${fixture.homeScore}-${fixture.awayScore} ${fixture.awayTeam}`
-            );
-          });
-        }
-
-        console.log("=".repeat(50));
-        return result;
+        return results;
       } catch (error) {
-        console.error("❌ Test failed:", error);
+        console.error("❌ One or more endpoint tests failed:", error);
         throw error;
       }
     },

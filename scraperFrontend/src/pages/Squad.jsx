@@ -3,24 +3,20 @@ import { useFootballData } from "../hooks/useFootballData";
 import "./Squad.css";
 
 const Squad = () => {
-  const { getSquadData, loading, error, dataStatus } = useFootballData();
+  const { getSquadData, playersLoading, playersError, dataStatus } =
+    useFootballData();
   const [squadData, setSquadData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadSquadData();
   }, []);
 
   const loadSquadData = async () => {
-    setIsLoading(true);
-
     try {
       const data = await getSquadData();
       setSquadData(data);
     } catch (error) {
       console.error("Error loading squad data:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -136,15 +132,15 @@ const Squad = () => {
         {/* Data Status */}
         {renderDataStatus()}
 
-        {isLoading ? (
+        {playersLoading ? (
           <div className="loading-container">
             <div className="loading-spinner"></div>
             <p className="loading-text">Loading squad data...</p>
           </div>
-        ) : error ? (
+        ) : playersError ? (
           <div className="error-container">
             <h3>Error Loading Squad</h3>
-            <p>Unable to load squad information. Please try again.</p>
+            <p>Unable to load squad information: {playersError}</p>
             <button className="refresh-button" onClick={loadSquadData}>
               Refresh
             </button>

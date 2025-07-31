@@ -4,21 +4,26 @@ import { useFootballData } from "../hooks/useFootballData";
 import "./Home.css";
 
 const Home = () => {
-  const { getPastFixtures, getLeaguePosition, loading, error, dataStatus } =
-    useFootballData();
+  const {
+    getPastFixtures,
+    getLeaguePosition,
+    fixturesLoading,
+    standingsLoading,
+    fixturesError,
+    standingsError,
+    dataStatus,
+  } = useFootballData();
+
   const [pastFixturesData, setPastFixturesData] = useState([]);
   const [leaguePositionData, setLeaguePositionData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadMatchData();
   }, []);
 
   const loadMatchData = async () => {
-    setIsLoading(true);
-
     try {
-      // Load both past fixtures and league position
+      // Load both past fixtures and league position in parallel with new focused endpoints
       const [pastFixtures, leaguePosition] = await Promise.all([
         getPastFixtures(3),
         getLeaguePosition(),
@@ -28,8 +33,6 @@ const Home = () => {
       setLeaguePositionData(leaguePosition);
     } catch (error) {
       console.error("Error loading match data:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -184,6 +187,10 @@ const Home = () => {
     });
   };
 
+  // Check if we're currently loading any data
+  const isLoading = fixturesLoading || standingsLoading;
+  const hasError = fixturesError || standingsError;
+
   return (
     <>
       <section className="hero">
@@ -200,7 +207,7 @@ const Home = () => {
           {renderDataStatus()}
 
           {/* League Position */}
-          {leaguePositionData && (
+          {leaguePositionData && !standingsLoading && (
             <div>
               <h3>Current League Position</h3>
               {renderLeaguePosition(leaguePositionData)}
@@ -208,7 +215,7 @@ const Home = () => {
           )}
 
           {/* Past Fixtures */}
-          {pastFixturesData.length > 0 && (
+          {pastFixturesData.length > 0 && !fixturesLoading && (
             <div>
               <h3>Recent Results</h3>
               <div className="fixtures-grid">
@@ -217,18 +224,31 @@ const Home = () => {
             </div>
           )}
 
-          {/* Loading state */}
+          {/* Loading state for individual sections */}
           {isLoading && (
             <div className="loading-container">
               <div className="loading-spinner"></div>
-              <p className="loading-text">Loading match data...</p>
+              <p className="loading-text">
+                Loading{" "}
+                {fixturesLoading && standingsLoading
+                  ? "fixtures and league position"
+                  : fixturesLoading
+                  ? "recent fixtures"
+                  : "league position"}
+                ...
+              </p>
             </div>
           )}
 
           {/* Error state */}
-          {error && (
+          {hasError && (
             <div className="error-container">
-              <p className="error-text">Error loading data: {error}</p>
+              <p className="error-text">
+                Error loading data:{" "}
+                {fixturesError && standingsError
+                  ? `${fixturesError}, ${standingsError}`
+                  : fixturesError || standingsError}
+              </p>
             </div>
           )}
         </div>

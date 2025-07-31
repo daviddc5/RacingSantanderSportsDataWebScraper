@@ -67,7 +67,7 @@ app.openapi_tags = [
     },
     {
         "name": "scraper",
-        "description": "Web scraping operations for Racing Santander data"
+        "description": "Web scraping operations for Racing Santander data from FBref.com - now with focused endpoints for better performance and caching"
     }
 ]
 

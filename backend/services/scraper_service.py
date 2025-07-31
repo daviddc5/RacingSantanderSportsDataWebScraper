@@ -16,9 +16,24 @@ class FBrefScraperService:
     
     def __init__(self):
         self.base_url = "https://fbref.com/en/squads/dee3bbc8/Racing-Santander-Stats"
-        self.cache = None
-        self.last_fetch_time = 0
-        self.cache_duration = 5 * 60 * 1000  # 5 minutes in milliseconds
+        
+        # Separate caches for different data types
+        self.squad_cache = None
+        self.fixtures_cache = None
+        self.standings_cache = None
+        self.full_cache = None  # Keep for backward compatibility
+        
+        # Separate timestamps for different data types
+        self.squad_last_fetch = 0
+        self.fixtures_last_fetch = 0
+        self.standings_last_fetch = 0
+        self.full_last_fetch = 0
+        
+        # Different cache durations for different data types
+        self.squad_cache_duration = 15 * 60 * 1000       # 15 minutes (players change less frequently)
+        self.fixtures_cache_duration = 5 * 60 * 1000     # 5 minutes (fixtures update more often)
+        self.standings_cache_duration = 10 * 60 * 1000   # 10 minutes (standings update regularly)
+        self.full_cache_duration = 5 * 60 * 1000         # 5 minutes (for backward compatibility)
         
         # CORS proxies to try
         self.proxies = [
@@ -34,80 +49,261 @@ class FBrefScraperService:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         }
 
-    def is_cache_valid(self) -> bool:
-        """Check if cache is still valid"""
-        if not self.cache or not self.last_fetch_time:
+    def is_cache_valid(self, cache_type: str = "full") -> bool:
+        """Check if cache is still valid for specific data type"""
+        cache_map = {
+            "squad": (self.squad_cache, self.squad_last_fetch, self.squad_cache_duration),
+            "fixtures": (self.fixtures_cache, self.fixtures_last_fetch, self.fixtures_cache_duration),
+            "standings": (self.standings_cache, self.standings_last_fetch, self.standings_cache_duration),
+            "full": (self.full_cache, self.full_last_fetch, self.full_cache_duration)
+        }
+        
+        cache, last_fetch, duration = cache_map.get(cache_type, (None, 0, 0))
+        
+        if not cache or not last_fetch:
             return False
         current_time = int(time.time() * 1000)  # Convert to milliseconds
-        return current_time - self.last_fetch_time < self.cache_duration
+        return current_time - last_fetch < duration
 
+    async def fetch_squad_data(self) -> Dict[str, Any]:
+        """
+        Fetch only squad/players data from FBref with separate caching.
+        Returns dict with squad data and metadata.
+        """
+        try:
+            # Check if we have valid cached squad data
+            if self.is_cache_valid("squad"):
+                logger.info("🔄 Using cached squad data from FBref (cache valid)")
+                return {
+                    "squad": self.squad_cache,
+                    "isLive": True,
+                    "lastUpdated": self.squad_last_fetch,
+                    "source": "FBref.com (squad cached)",
+                }
+
+            logger.info("🌐 Attempting to fetch fresh squad data from FBref...")
+            
+            # Fetch and parse HTML
+            html = await self._fetch_html()
+            if not html:
+                return self._get_fallback_squad_data()
+
+            soup = BeautifulSoup(html, 'html.parser')
+            squad_data = self.extract_squad_data(soup)
+
+            # Cache the results
+            self.squad_cache = squad_data
+            self.squad_last_fetch = int(time.time() * 1000)
+
+            logger.info("✅ Successfully fetched and cached squad data from FBref")
+            logger.info(f"👥 Squad size: {len(squad_data)}")
+
+            return {
+                "squad": squad_data,
+                "isLive": True,
+                "lastUpdated": self.squad_last_fetch,
+                "source": "FBref.com (squad live)",
+            }
+
+        except Exception as error:
+            logger.error(f"❌ Error fetching squad data from FBref: {str(error)}")
+            return self._get_fallback_squad_data()
+
+    async def fetch_fixtures_data(self) -> Dict[str, Any]:
+        """
+        Fetch only fixtures data from FBref with separate caching.
+        Returns dict with pastFixtures data and metadata.
+        """
+        try:
+            # Check if we have valid cached fixtures data
+            if self.is_cache_valid("fixtures"):
+                logger.info("🔄 Using cached fixtures data from FBref (cache valid)")
+                return {
+                    "pastFixtures": self.fixtures_cache,
+                    "isLive": True,
+                    "lastUpdated": self.fixtures_last_fetch,
+                    "source": "FBref.com (fixtures cached)",
+                }
+
+            logger.info("🌐 Attempting to fetch fresh fixtures data from FBref...")
+            
+            # Fetch and parse HTML
+            html = await self._fetch_html()
+            if not html:
+                return self._get_fallback_fixtures_data()
+
+            soup = BeautifulSoup(html, 'html.parser')
+            fixtures_data = self.extract_past_fixtures(soup)
+
+            # Cache the results
+            self.fixtures_cache = fixtures_data
+            self.fixtures_last_fetch = int(time.time() * 1000)
+
+            logger.info("✅ Successfully fetched and cached fixtures data from FBref")
+            logger.info(f"⚽ Fixtures count: {len(fixtures_data)}")
+
+            return {
+                "pastFixtures": fixtures_data,
+                "isLive": True,
+                "lastUpdated": self.fixtures_last_fetch,
+                "source": "FBref.com (fixtures live)",
+            }
+
+        except Exception as error:
+            logger.error(f"❌ Error fetching fixtures data from FBref: {str(error)}")
+            return self._get_fallback_fixtures_data()
+
+    async def fetch_standings_data(self) -> Dict[str, Any]:
+        """
+        Fetch only standings data from FBref with separate caching.
+        Returns dict with leaguePosition data and metadata.
+        """
+        try:
+            # Check if we have valid cached standings data
+            if self.is_cache_valid("standings"):
+                logger.info("🔄 Using cached standings data from FBref (cache valid)")
+                return {
+                    "leaguePosition": self.standings_cache,
+                    "isLive": True,
+                    "lastUpdated": self.standings_last_fetch,
+                    "source": "FBref.com (standings cached)",
+                }
+
+            logger.info("🌐 Attempting to fetch fresh standings data from FBref...")
+            
+            # Fetch and parse HTML
+            html = await self._fetch_html()
+            if not html:
+                return self._get_fallback_standings_data()
+
+            soup = BeautifulSoup(html, 'html.parser')
+            standings_data = self.extract_league_position(soup)
+
+            # Cache the results
+            self.standings_cache = standings_data
+            self.standings_last_fetch = int(time.time() * 1000)
+
+            logger.info("✅ Successfully fetched and cached standings data from FBref")
+            logger.info(f"📊 League position: {standings_data.get('position', 'Unknown') if standings_data else 'Not found'}")
+
+            return {
+                "leaguePosition": standings_data,
+                "isLive": True,
+                "lastUpdated": self.standings_last_fetch,
+                "source": "FBref.com (standings live)",
+            }
+
+        except Exception as error:
+            logger.error(f"❌ Error fetching standings data from FBref: {str(error)}")
+            return self._get_fallback_standings_data()
+
+    async def _fetch_html(self) -> Optional[str]:
+        """
+        Common method to fetch HTML from FBref using proxies.
+        Returns HTML string or None if all proxies fail.
+        """
+        response = None
+        last_error = None
+        successful_proxy = None
+
+        # Try each proxy
+        for proxy in self.proxies:
+            try:
+                if proxy == "https://cors-anywhere.herokuapp.com/":
+                    target_url = self.base_url
+                else:
+                    target_url = requests.utils.quote(self.base_url, safe='')
+                
+                full_url = proxy + target_url
+                
+                logger.info(f"🔗 Trying proxy: {proxy}")
+                
+                start_time = time.time()
+                response = requests.get(
+                    full_url,
+                    headers=self.headers,
+                    timeout=10
+                )
+                end_time = time.time()
+                
+                logger.info(f"⏱️ Response time: {(end_time - start_time) * 1000:.0f}ms")
+                logger.info(f"📊 Response status: {response.status_code}")
+                
+                if response.ok:
+                    successful_proxy = proxy
+                    logger.info(f"✅ Successfully fetched data using proxy: {proxy}")
+                    return response.text
+                else:
+                    logger.warning(f"❌ Proxy {proxy} returned status: {response.status_code}")
+                    last_error = Exception(f"HTTP error! status: {response.status_code}")
+                    
+            except Exception as error:
+                logger.warning(f"❌ Proxy {proxy} failed: {str(error)}")
+                last_error = error
+                continue
+
+        logger.warning("❌ All proxies failed")
+        return None
+
+    # Fallback data methods
+    def _get_fallback_squad_data(self) -> Dict[str, Any]:
+        """Get fallback squad data when network requests fail"""
+        fallback = self.get_fallback_data()
+        return {
+            "squad": fallback["squad"],
+            "isLive": False,
+            "lastUpdated": int(time.time() * 1000),
+            "source": "FBref.com (squad fallback)",
+        }
+
+    def _get_fallback_fixtures_data(self) -> Dict[str, Any]:
+        """Get fallback fixtures data when network requests fail"""
+        fallback = self.get_fallback_data()
+        return {
+            "pastFixtures": fallback["pastFixtures"],
+            "isLive": False,
+            "lastUpdated": int(time.time() * 1000),
+            "source": "FBref.com (fixtures fallback)",
+        }
+
+    def _get_fallback_standings_data(self) -> Dict[str, Any]:
+        """Get fallback standings data when network requests fail"""
+        fallback = self.get_fallback_data()
+        return {
+            "leaguePosition": fallback["leaguePosition"],
+            "isLive": False,
+            "lastUpdated": int(time.time() * 1000),
+            "source": "FBref.com (standings fallback)",
+        }
+
+    # Keep the original method for backward compatibility
     async def fetch_live_data(self) -> Dict[str, Any]:
         """
         Fetch data from FBref with fallback to static data.
         Returns dict with squad, pastFixtures, leaguePosition, and metadata.
+        **DEPRECATED**: Use individual fetch methods instead.
         """
         try:
             # Check if we have valid cached data
-            if self.is_cache_valid():
+            if self.is_cache_valid("full"):
                 logger.info("🔄 Using cached data from FBref (cache valid)")
                 return {
-                    **self.cache,
+                    **self.full_cache,
                     "isLive": True,
-                    "lastUpdated": self.last_fetch_time,
-                    "source": "FBref.com (cached)",
+                    "lastUpdated": self.full_last_fetch,
+                    "source": "FBref.com (full cached)",
                 }
 
             logger.info("🌐 Attempting to fetch fresh data from FBref...")
             logger.info(f"📡 Target URL: {self.base_url}")
 
-            response = None
-            last_error = None
-            successful_proxy = None
-
-            # Try each proxy
-            for proxy in self.proxies:
-                try:
-                    if proxy == "https://cors-anywhere.herokuapp.com/":
-                        target_url = self.base_url
-                    else:
-                        target_url = requests.utils.quote(self.base_url, safe='')
-                    
-                    full_url = proxy + target_url
-                    
-                    logger.info(f"🔗 Trying proxy: {proxy}")
-                    logger.info(f"📋 Full URL: {full_url}")
-                    
-                    start_time = time.time()
-                    response = requests.get(
-                        full_url,
-                        headers=self.headers,
-                        timeout=10
-                    )
-                    end_time = time.time()
-                    
-                    logger.info(f"⏱️ Response time: {(end_time - start_time) * 1000:.0f}ms")
-                    logger.info(f"📊 Response status: {response.status_code}")
-                    logger.info(f"📏 Response size: {len(response.content)} bytes")
-                    
-                    if response.ok:
-                        successful_proxy = proxy
-                        logger.info(f"✅ Successfully fetched data using proxy: {proxy}")
-                        break
-                    else:
-                        logger.warning(f"❌ Proxy {proxy} returned status: {response.status_code}")
-                        last_error = Exception(f"HTTP error! status: {response.status_code}")
-                        
-                except Exception as error:
-                    logger.warning(f"❌ Proxy {proxy} failed: {str(error)}")
-                    last_error = error
-                    continue
-
-            if not response or not response.ok:
+            # Fetch HTML
+            html = await self._fetch_html()
+            if not html:
                 logger.warning("❌ All proxies failed, using fallback data")
                 return self.get_fallback_data()
 
             logger.info("📄 Parsing HTML response...")
-            html = response.text
             logger.info(f"📄 HTML length: {len(html)} characters")
 
             # Check if we got actual HTML content
@@ -125,18 +321,17 @@ class FBrefScraperService:
             logger.info(f"   - League position: {'Found' if data['leaguePosition'] else 'Not found'}")
 
             # Cache the results
-            self.cache = data
-            self.last_fetch_time = int(time.time() * 1000)
+            self.full_cache = data
+            self.full_last_fetch = int(time.time() * 1000)
 
             logger.info("✅ Successfully fetched and parsed live data from FBref")
-            logger.info(f"📅 Data timestamp: {datetime.fromtimestamp(self.last_fetch_time / 1000).isoformat()}")
-            logger.info(f"🔗 Used proxy: {successful_proxy}")
+            logger.info(f"📅 Data timestamp: {datetime.fromtimestamp(self.full_last_fetch / 1000).isoformat()}")
 
             return {
                 **data,
                 "isLive": True,
-                "lastUpdated": self.last_fetch_time,
-                "source": f"FBref.com (live via {successful_proxy})",
+                "lastUpdated": self.full_last_fetch,
+                "source": "FBref.com (full live)",
             }
 
         except Exception as error:
