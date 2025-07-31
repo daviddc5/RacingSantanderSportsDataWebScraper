@@ -242,19 +242,35 @@ class FBrefScraperService:
                             assists = 0
                     
                     if matches > 0:
+                        # Extract player ID from the name link for direct FBRef image URL
+                        photo_url = None
+                        if name_cell and name_cell.get('href'):
+                            href = name_cell.get('href')
+                            # Extract player ID from href like: /en/players/0f7dbaf6/Jokin-Ezkieta
+                            id_match = re.search(r'/en/players/([a-f0-9]+)/', href)
+                            if id_match:
+                                player_id = id_match.group(1)
+                                # Construct direct FBRef image URL
+                                photo_url = f"https://fbref.com/req/202302030/images/headshots/{player_id}_2022.jpg"
+                        
+                        # Fallback to local placeholder if no ID found
+                        if not photo_url:
+                            clean_name = re.sub(r'[^a-zA-Z0-9\s]', '', name)
+                            clean_name = clean_name.lower().replace(' ', '_')
+                            photo_url = f"/images/players/{clean_name}.jpg"
+                        
                         players.append({
                             "id": index + 1,
                             "name": name,
                             "position": position,
                             "age": age,
                             "nationality": nationality,
-                            "photo": f"/images/players/{name.lower().replace(' ', '').replace('[^a-z]', '')}.jpg",
+                            "photo": photo_url,
                             "number": self.get_player_number(name),
                             "matches": matches,
                             "goals": goals,
                             "assists": assists,
                         })
-                    print(f"player is {players}")
                         
                 except Exception as error:
                     logger.warning(f"Error parsing player row {index}: {str(error)}")
