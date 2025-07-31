@@ -39,15 +39,51 @@ const Home = () => {
   const renderDataStatus = () => {
     if (!dataStatus) return null;
 
+    const formatUTCTime = (timestamp) => {
+      if (!timestamp) return null;
+      return new Date(timestamp).toLocaleString("en-GB", {
+        timeZone: "UTC",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    };
+
+    // Parse the source to extract the scraped time
+    const parseSource = (source) => {
+      if (!source) return { type: "Unknown", scrapedTime: null };
+
+      if (source.includes("Database")) {
+        const match = source.match(/last scraped: ([^)]+)/);
+        if (match) {
+          return {
+            type: "Database",
+            scrapedTime: formatUTCTime(match[1]),
+          };
+        }
+        return { type: "Database", scrapedTime: null };
+      }
+
+      return { type: source, scrapedTime: null };
+    };
+
+    const { type, scrapedTime } = parseSource(dataStatus.source);
+
     return (
       <div className={`data-status ${dataStatus.isLive ? "live" : "fallback"}`}>
         <div className="status-icon">{dataStatus.isLive ? "✓" : "⚠"}</div>
         <div className="status-content">
           <div className="status-message">{dataStatus.message}</div>
-          <div className="status-source">Source: {dataStatus.source}</div>
+          <div className="status-source">Source: {type}</div>
+          {scrapedTime && (
+            <div className="status-time">Last scraped: {scrapedTime} UTC</div>
+          )}
           {dataStatus.lastUpdated && (
             <div className="status-time">
-              Last updated: {new Date(dataStatus.lastUpdated).toLocaleString()}
+              Last updated: {formatUTCTime(dataStatus.lastUpdated)} UTC
             </div>
           )}
         </div>
