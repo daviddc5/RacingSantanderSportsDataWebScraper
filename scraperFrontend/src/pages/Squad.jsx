@@ -3,21 +3,10 @@ import { useFootballData } from "../hooks/useFootballData";
 import "./Squad.css";
 
 const Squad = () => {
-  const {
-    getSquadData,
-    playersLoading,
-    playersError,
-    dataStatus,
-    fetchFreshPlayers,
-    loadPlayersToDatabase,
-  } = useFootballData();
+  const { getSquadData, playersLoading, playersError, dataStatus } =
+    useFootballData();
 
   const [squadData, setSquadData] = useState([]);
-  const [previewData, setPreviewData] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [fetchError, setFetchError] = useState(null);
-  const [loadError, setLoadError] = useState(null);
-  const [loadSuccess, setLoadSuccess] = useState(null);
 
   useEffect(() => {
     loadSquadData();
@@ -30,48 +19,6 @@ const Squad = () => {
     } catch (error) {
       console.error("Error loading squad data:", error);
     }
-  };
-
-  const handleFetchFreshData = async () => {
-    try {
-      setFetchError(null);
-      console.log("Fetching fresh players data...");
-      const freshData = await fetchFreshPlayers();
-      setPreviewData(freshData);
-      setShowPreview(true);
-      console.log("Fresh data fetched successfully");
-    } catch (error) {
-      console.error("Error fetching fresh data:", error);
-      setFetchError(error.message);
-    }
-  };
-
-  const handleLoadToDatabase = async () => {
-    try {
-      setLoadError(null);
-      setLoadSuccess(null);
-      console.log("Loading players data to database...");
-      const result = await loadPlayersToDatabase();
-      setLoadSuccess(
-        `Successfully loaded ${
-          result.data_count || "unknown"
-        } players to database`
-      );
-      setShowPreview(false);
-      setPreviewData(null);
-      // Refresh the displayed data
-      await loadSquadData();
-      console.log("Data loaded to database successfully");
-    } catch (error) {
-      console.error("Error loading data to database:", error);
-      setLoadError(error.message);
-    }
-  };
-
-  const handleCancelPreview = () => {
-    setShowPreview(false);
-    setPreviewData(null);
-    setFetchError(null);
   };
 
   const renderDataStatus = () => {
@@ -221,84 +168,6 @@ const Squad = () => {
 
         {/* Data Status */}
         {renderDataStatus()}
-
-        {/* Data Management Controls */}
-        <div className="data-controls">
-          <div className="control-buttons">
-            <button
-              className="fetch-button"
-              onClick={handleFetchFreshData}
-              disabled={playersLoading}
-            >
-              {playersLoading ? "Fetching..." : "🔄 Fetch New Data"}
-            </button>
-
-            {showPreview && (
-              <button
-                className="load-button"
-                onClick={handleLoadToDatabase}
-                disabled={playersLoading}
-              >
-                {playersLoading ? "Loading..." : "💾 Load to Database"}
-              </button>
-            )}
-
-            {showPreview && (
-              <button
-                className="cancel-button"
-                onClick={handleCancelPreview}
-                disabled={playersLoading}
-              >
-                ❌ Cancel
-              </button>
-            )}
-          </div>
-
-          {/* Status Messages */}
-          {fetchError && (
-            <div className="error-message">
-              <p>❌ Fetch Error: {fetchError}</p>
-            </div>
-          )}
-
-          {loadError && (
-            <div className="error-message">
-              <p>❌ Load Error: {loadError}</p>
-            </div>
-          )}
-
-          {loadSuccess && (
-            <div className="success-message">
-              <p>✅ {loadSuccess}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Preview Data */}
-        {showPreview && previewData && (
-          <div className="preview-section">
-            <h3>📋 Preview Fresh Data</h3>
-            <p className="preview-info">
-              Found {previewData.squad?.length || 0} players. Review the data
-              below and click "Load to Database" to save it.
-            </p>
-            <div className="preview-players">
-              {previewData.squad?.slice(0, 5).map((player, index) => (
-                <div key={index} className="preview-player-card">
-                  <div className="player-basic-info">
-                    <strong>{player.name}</strong> - {player.position}
-                    {player.age && <span> (Age: {player.age})</span>}
-                  </div>
-                </div>
-              ))}
-              {previewData.squad?.length > 5 && (
-                <p className="preview-more">
-                  ...and {previewData.squad.length - 5} more players
-                </p>
-              )}
-            </div>
-          </div>
-        )}
 
         {playersLoading ? (
           <div className="loading-container">

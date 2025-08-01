@@ -4,6 +4,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Squad from "./pages/Squad";
 import History from "./pages/History";
+import Admin from "./pages/Admin";
 
 import "./App.css";
 
@@ -17,6 +18,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/squad" element={<Squad />} />
             <Route path="/history" element={<History />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
         </main>
         <Footer />

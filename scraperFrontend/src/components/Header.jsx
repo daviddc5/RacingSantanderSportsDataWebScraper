@@ -58,6 +58,15 @@ const Header = () => {
                 HISTORY
               </Link>
             </li>
+            <li>
+              <Link
+                to="/admin"
+                className={isActive("/admin") ? "active" : ""}
+                onClick={closeMenu}
+              >
+                ADMIN
+              </Link>
+            </li>
           </ul>
         </nav>
 
