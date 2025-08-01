@@ -12,10 +12,28 @@ const Home = () => {
     fixturesError,
     standingsError,
     dataStatus,
+    fetchFreshFixtures,
+    fetchFreshStandings,
+    loadFixturesToDatabase,
+    loadStandingsToDatabase,
   } = useFootballData();
 
   const [pastFixturesData, setPastFixturesData] = useState([]);
   const [leaguePositionData, setLeaguePositionData] = useState(null);
+
+  // Preview states
+  const [previewFixtures, setPreviewFixtures] = useState(null);
+  const [previewStandings, setPreviewStandings] = useState(null);
+  const [showFixturesPreview, setShowFixturesPreview] = useState(false);
+  const [showStandingsPreview, setShowStandingsPreview] = useState(false);
+
+  // Error and success states
+  const [fetchFixturesError, setFetchFixturesError] = useState(null);
+  const [fetchStandingsError, setFetchStandingsError] = useState(null);
+  const [loadFixturesError, setLoadFixturesError] = useState(null);
+  const [loadStandingsError, setLoadStandingsError] = useState(null);
+  const [loadFixturesSuccess, setLoadFixturesSuccess] = useState(null);
+  const [loadStandingsSuccess, setLoadStandingsSuccess] = useState(null);
 
   useEffect(() => {
     loadMatchData();
@@ -34,6 +52,89 @@ const Home = () => {
     } catch (error) {
       console.error("Error loading match data:", error);
     }
+  };
+
+  // Fetch handlers
+  const handleFetchFreshFixtures = async () => {
+    try {
+      setFetchFixturesError(null);
+      console.log("Fetching fresh fixtures data...");
+      const freshData = await fetchFreshFixtures();
+      setPreviewFixtures(freshData);
+      setShowFixturesPreview(true);
+      console.log("Fresh fixtures data fetched successfully");
+    } catch (error) {
+      console.error("Error fetching fresh fixtures data:", error);
+      setFetchFixturesError(error.message);
+    }
+  };
+
+  const handleFetchFreshStandings = async () => {
+    try {
+      setFetchStandingsError(null);
+      console.log("Fetching fresh standings data...");
+      const freshData = await fetchFreshStandings();
+      setPreviewStandings(freshData);
+      setShowStandingsPreview(true);
+      console.log("Fresh standings data fetched successfully");
+    } catch (error) {
+      console.error("Error fetching fresh standings data:", error);
+      setFetchStandingsError(error.message);
+    }
+  };
+
+  // Load to database handlers
+  const handleLoadFixturesToDatabase = async () => {
+    try {
+      setLoadFixturesError(null);
+      setLoadFixturesSuccess(null);
+      console.log("Loading fixtures data to database...");
+      const result = await loadFixturesToDatabase();
+      setLoadFixturesSuccess(
+        `Successfully loaded ${
+          result.data_count || "unknown"
+        } fixtures to database`
+      );
+      setShowFixturesPreview(false);
+      setPreviewFixtures(null);
+      // Refresh the displayed data
+      await loadMatchData();
+      console.log("Fixtures data loaded to database successfully");
+    } catch (error) {
+      console.error("Error loading fixtures data to database:", error);
+      setLoadFixturesError(error.message);
+    }
+  };
+
+  const handleLoadStandingsToDatabase = async () => {
+    try {
+      setLoadStandingsError(null);
+      setLoadStandingsSuccess(null);
+      console.log("Loading standings data to database...");
+      const result = await loadStandingsToDatabase();
+      setLoadStandingsSuccess("Successfully loaded standings data to database");
+      setShowStandingsPreview(false);
+      setPreviewStandings(null);
+      // Refresh the displayed data
+      await loadMatchData();
+      console.log("Standings data loaded to database successfully");
+    } catch (error) {
+      console.error("Error loading standings data to database:", error);
+      setLoadStandingsError(error.message);
+    }
+  };
+
+  // Cancel preview handlers
+  const handleCancelFixturesPreview = () => {
+    setShowFixturesPreview(false);
+    setPreviewFixtures(null);
+    setFetchFixturesError(null);
+  };
+
+  const handleCancelStandingsPreview = () => {
+    setShowStandingsPreview(false);
+    setPreviewStandings(null);
+    setFetchStandingsError(null);
   };
 
   const renderDataStatus = () => {
@@ -241,6 +342,182 @@ const Home = () => {
         <div className="container">
           {/* Data Status */}
           {renderDataStatus()}
+
+          {/* Data Management Controls */}
+          <div className="data-controls">
+            <h3>🔧 Data Management</h3>
+
+            <div className="section-controls">
+              <h4>League Position & Standings</h4>
+              <div className="control-buttons">
+                <button
+                  className="fetch-button"
+                  onClick={handleFetchFreshStandings}
+                  disabled={standingsLoading}
+                >
+                  {standingsLoading ? "Fetching..." : "🔄 Fetch New Standings"}
+                </button>
+
+                {showStandingsPreview && (
+                  <>
+                    <button
+                      className="load-button"
+                      onClick={handleLoadStandingsToDatabase}
+                      disabled={standingsLoading}
+                    >
+                      {standingsLoading ? "Loading..." : "💾 Load to Database"}
+                    </button>
+
+                    <button
+                      className="cancel-button"
+                      onClick={handleCancelStandingsPreview}
+                      disabled={standingsLoading}
+                    >
+                      ❌ Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Standings Status Messages */}
+              {fetchStandingsError && (
+                <div className="error-message">
+                  <p>❌ Fetch Error: {fetchStandingsError}</p>
+                </div>
+              )}
+
+              {loadStandingsError && (
+                <div className="error-message">
+                  <p>❌ Load Error: {loadStandingsError}</p>
+                </div>
+              )}
+
+              {loadStandingsSuccess && (
+                <div className="success-message">
+                  <p>✅ {loadStandingsSuccess}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="section-controls">
+              <h4>Recent Results & Fixtures</h4>
+              <div className="control-buttons">
+                <button
+                  className="fetch-button"
+                  onClick={handleFetchFreshFixtures}
+                  disabled={fixturesLoading}
+                >
+                  {fixturesLoading ? "Fetching..." : "🔄 Fetch New Fixtures"}
+                </button>
+
+                {showFixturesPreview && (
+                  <>
+                    <button
+                      className="load-button"
+                      onClick={handleLoadFixturesToDatabase}
+                      disabled={fixturesLoading}
+                    >
+                      {fixturesLoading ? "Loading..." : "💾 Load to Database"}
+                    </button>
+
+                    <button
+                      className="cancel-button"
+                      onClick={handleCancelFixturesPreview}
+                      disabled={fixturesLoading}
+                    >
+                      ❌ Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Fixtures Status Messages */}
+              {fetchFixturesError && (
+                <div className="error-message">
+                  <p>❌ Fetch Error: {fetchFixturesError}</p>
+                </div>
+              )}
+
+              {loadFixturesError && (
+                <div className="error-message">
+                  <p>❌ Load Error: {loadFixturesError}</p>
+                </div>
+              )}
+
+              {loadFixturesSuccess && (
+                <div className="success-message">
+                  <p>✅ {loadFixturesSuccess}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Preview Standings */}
+          {showStandingsPreview && previewStandings && (
+            <div className="preview-section">
+              <h3>📋 Preview Fresh Standings Data</h3>
+              <p className="preview-info">
+                Review the standings data below and click "Load to Database" to
+                save it.
+              </p>
+              <div className="preview-standings">
+                {previewStandings.leaguePosition && (
+                  <div className="preview-position">
+                    <strong>Position:</strong>{" "}
+                    {previewStandings.leaguePosition.position} |
+                    <strong> Points:</strong>{" "}
+                    {previewStandings.leaguePosition.points} |
+                    <strong> Played:</strong>{" "}
+                    {previewStandings.leaguePosition.played}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Preview Fixtures */}
+          {showFixturesPreview && previewFixtures && (
+            <div className="preview-section">
+              <h3>📋 Preview Fresh Fixtures Data</h3>
+              <p className="preview-info">
+                Found {previewFixtures.pastFixtures?.length || 0} fixtures.
+                Review the data below and click "Load to Database" to save it.
+              </p>
+              <div className="preview-fixtures">
+                {previewFixtures.pastFixtures
+                  ?.slice(0, 3)
+                  .map((fixture, index) => (
+                    <div key={index} className="preview-fixture-card">
+                      <div className="fixture-teams">
+                        <strong>{fixture.homeTeam}</strong> vs{" "}
+                        <strong>{fixture.awayTeam}</strong>
+                      </div>
+                      <div className="fixture-details">
+                        {fixture.homeScore !== undefined &&
+                          fixture.awayScore !== undefined && (
+                            <span>
+                              Score: {fixture.homeScore}-{fixture.awayScore}
+                            </span>
+                          )}
+                        {fixture.date && (
+                          <span>
+                            {" "}
+                            | Date:{" "}
+                            {new Date(fixture.date).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                {previewFixtures.pastFixtures?.length > 3 && (
+                  <p className="preview-more">
+                    ...and {previewFixtures.pastFixtures.length - 3} more
+                    fixtures
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* League Position */}
           {leaguePositionData && !standingsLoading && (

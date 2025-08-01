@@ -11,6 +11,10 @@ const ENDPOINTS = {
   standings: `${API_BASE_URL}/standings`,
   status: `${API_BASE_URL}/status`,
   refresh: `${API_BASE_URL}/refresh`,
+  // New manual load endpoints
+  loadPlayers: `${API_BASE_URL}/load-players`,
+  loadFixtures: `${API_BASE_URL}/load-fixtures`,
+  loadStandings: `${API_BASE_URL}/load-standings`,
   // Keep legacy scraper endpoints for fallback
   legacy: {
     players: "http://localhost:8000/api/v1/scrape/players",
@@ -407,6 +411,174 @@ class RacingFootballDataV3 {
       },
     };
   }
+
+  // New methods for manual fetch and load operations
+  async fetchFreshPlayers() {
+    /**Fetch fresh players data from scraper without saving to database.*/
+    try {
+      console.log("🔄 Fetching fresh players data from scraper...");
+      const response = await fetch(ENDPOINTS.legacy.players);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error("Invalid response from scraper");
+      }
+
+      console.log("✅ Successfully fetched fresh players data");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Error fetching fresh players data:", error);
+      throw error;
+    }
+  }
+
+  async fetchFreshFixtures() {
+    /**Fetch fresh fixtures data from scraper without saving to database.*/
+    try {
+      console.log("🔄 Fetching fresh fixtures data from scraper...");
+      const response = await fetch(ENDPOINTS.legacy.fixtures);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error("Invalid response from scraper");
+      }
+
+      console.log("✅ Successfully fetched fresh fixtures data");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Error fetching fresh fixtures data:", error);
+      throw error;
+    }
+  }
+
+  async fetchFreshStandings() {
+    /**Fetch fresh standings data from scraper without saving to database.*/
+    try {
+      console.log("🔄 Fetching fresh standings data from scraper...");
+      const response = await fetch(ENDPOINTS.legacy.standings);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error("Invalid response from scraper");
+      }
+
+      console.log("✅ Successfully fetched fresh standings data");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Error fetching fresh standings data:", error);
+      throw error;
+    }
+  }
+
+  async loadPlayersToDatabase() {
+    /**Load validated players data to database.*/
+    try {
+      console.log("💾 Loading players data to database...");
+      const response = await fetch(ENDPOINTS.loadPlayers, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || "Failed to load players to database");
+      }
+
+      console.log(
+        `✅ Successfully loaded ${result.data_count} players to database`
+      );
+      return result;
+    } catch (error) {
+      console.error("❌ Error loading players to database:", error);
+      throw error;
+    }
+  }
+
+  async loadFixturesToDatabase() {
+    /**Load validated fixtures data to database.*/
+    try {
+      console.log("💾 Loading fixtures data to database...");
+      const response = await fetch(ENDPOINTS.loadFixtures, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(
+          result.message || "Failed to load fixtures to database"
+        );
+      }
+
+      console.log(
+        `✅ Successfully loaded ${result.data_count} fixtures to database`
+      );
+      return result;
+    } catch (error) {
+      console.error("❌ Error loading fixtures to database:", error);
+      throw error;
+    }
+  }
+
+  async loadStandingsToDatabase() {
+    /**Load validated standings data to database.*/
+    try {
+      console.log("💾 Loading standings data to database...");
+      const response = await fetch(ENDPOINTS.loadStandings, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(
+          result.message || "Failed to load standings to database"
+        );
+      }
+
+      console.log("✅ Successfully loaded standings to database");
+      return result;
+    } catch (error) {
+      console.error("❌ Error loading standings to database:", error);
+      throw error;
+    }
+  }
 }
 
 // Enhanced React hook with instant loading and async updates
@@ -537,6 +709,49 @@ export const useFootballData = () => {
     forceUpdateStandings: () =>
       fetchWithState(
         () => api.fetchStandingsData(true),
+        setStandingsLoading,
+        setStandingsError
+      ),
+
+    // New fetch and load methods for manual data management
+    fetchFreshPlayers: () =>
+      fetchWithState(
+        () => api.fetchFreshPlayers(),
+        setPlayersLoading,
+        setPlayersError
+      ),
+
+    fetchFreshFixtures: () =>
+      fetchWithState(
+        () => api.fetchFreshFixtures(),
+        setFixturesLoading,
+        setFixturesError
+      ),
+
+    fetchFreshStandings: () =>
+      fetchWithState(
+        () => api.fetchFreshStandings(),
+        setStandingsLoading,
+        setStandingsError
+      ),
+
+    loadPlayersToDatabase: () =>
+      fetchWithState(
+        () => api.loadPlayersToDatabase(),
+        setPlayersLoading,
+        setPlayersError
+      ),
+
+    loadFixturesToDatabase: () =>
+      fetchWithState(
+        () => api.loadFixturesToDatabase(),
+        setFixturesLoading,
+        setFixturesError
+      ),
+
+    loadStandingsToDatabase: () =>
+      fetchWithState(
+        () => api.loadStandingsToDatabase(),
         setStandingsLoading,
         setStandingsError
       ),

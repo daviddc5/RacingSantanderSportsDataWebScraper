@@ -362,3 +362,149 @@ async def test_populate_data(
                 "request_id": request_id,
             }
         ) 
+
+@football_router.post("/load-players")
+async def load_players_to_database(
+    request: Request,
+    football_service: FootballDataService = Depends(get_football_service)
+) -> Dict[str, Any]:
+    """
+    Manually load fresh players data to database.
+    
+    This endpoint:
+    - Fetches fresh data from scraper
+    - Validates the data before saving
+    - Only clears existing data if new data is valid
+    - Saves validated data to database
+    """
+    try:
+        request_id = _get_request_id(request)
+        logger.info(f"[{request_id}] Manual players data load to database requested")
+        
+        # Load data to database with validation
+        result = await football_service.manual_load_players()
+        
+        if result["success"]:
+            logger.info(f"[{request_id}] Successfully loaded {result.get('count', 0)} players to database")
+            return {
+                "success": True,
+                "message": f"Successfully loaded {result.get('count', 0)} players to database",
+                "request_id": request_id,
+                "data_count": result.get('count', 0)
+            }
+        else:
+            logger.warning(f"[{request_id}] Failed to load players data: {result.get('error')}")
+            return {
+                "success": False,
+                "message": f"Failed to load players data: {result.get('error')}",
+                "request_id": request_id
+            }
+        
+    except Exception as error:
+        request_id = _get_request_id(request)
+        logger.exception(f"[{request_id}] Error in load_players_to_database")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to load players data to database",
+                "message": str(error),
+                "request_id": request_id,
+            }
+        )
+
+@football_router.post("/load-fixtures")
+async def load_fixtures_to_database(
+    request: Request,
+    football_service: FootballDataService = Depends(get_football_service)
+) -> Dict[str, Any]:
+    """
+    Manually load fresh fixtures data to database.
+    
+    This endpoint:
+    - Fetches fresh data from scraper
+    - Validates the data before saving
+    - Only clears existing data if new data is valid
+    - Saves validated data to database
+    """
+    try:
+        request_id = _get_request_id(request)
+        logger.info(f"[{request_id}] Manual fixtures data load to database requested")
+        
+        # Load data to database with validation
+        result = await football_service.manual_load_fixtures()
+        
+        if result["success"]:
+            logger.info(f"[{request_id}] Successfully loaded {result.get('count', 0)} fixtures to database")
+            return {
+                "success": True,
+                "message": f"Successfully loaded {result.get('count', 0)} fixtures to database",
+                "request_id": request_id,
+                "data_count": result.get('count', 0)
+            }
+        else:
+            logger.warning(f"[{request_id}] Failed to load fixtures data: {result.get('error')}")
+            return {
+                "success": False,
+                "message": f"Failed to load fixtures data: {result.get('error')}",
+                "request_id": request_id
+            }
+        
+    except Exception as error:
+        request_id = _get_request_id(request)
+        logger.exception(f"[{request_id}] Error in load_fixtures_to_database")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to load fixtures data to database",
+                "message": str(error),
+                "request_id": request_id,
+            }
+        )
+
+@football_router.post("/load-standings")
+async def load_standings_to_database(
+    request: Request,
+    football_service: FootballDataService = Depends(get_football_service)
+) -> Dict[str, Any]:
+    """
+    Manually load fresh standings data to database.
+    
+    This endpoint:
+    - Fetches fresh data from scraper
+    - Validates the data before saving
+    - Only clears existing data if new data is valid
+    - Saves validated data to database
+    """
+    try:
+        request_id = _get_request_id(request)
+        logger.info(f"[{request_id}] Manual standings data load to database requested")
+        
+        # Load data to database with validation
+        result = await football_service.manual_load_standings()
+        
+        if result["success"]:
+            logger.info(f"[{request_id}] Successfully loaded standings to database")
+            return {
+                "success": True,
+                "message": "Successfully loaded standings data to database",
+                "request_id": request_id
+            }
+        else:
+            logger.warning(f"[{request_id}] Failed to load standings data: {result.get('error')}")
+            return {
+                "success": False,
+                "message": f"Failed to load standings data: {result.get('error')}",
+                "request_id": request_id
+            }
+        
+    except Exception as error:
+        request_id = _get_request_id(request)
+        logger.exception(f"[{request_id}] Error in load_standings_to_database")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to load standings data to database",
+                "message": str(error),
+                "request_id": request_id,
+            }
+        ) 

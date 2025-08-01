@@ -496,4 +496,289 @@ class FootballDataService:
             return {"success": True, "message": "All data refresh initiated"}
         except Exception as e:
             logger.exception("Error in force refresh all")
-            return {"success": False, "error": str(e)} 
+            return {"success": False, "error": str(e)}
+
+    async def manual_load_players(self) -> Dict[str, Any]:
+        """
+        Manually load fresh players data to database with validation.
+        
+        This method:
+        - Fetches fresh data from scraper first
+        - Validates the data before doing anything
+        - Only clears existing data if new data is valid
+        - Returns detailed result with counts
+        """
+        logger.info("Starting manual players data load with validation")
+        
+        try:
+            # First, fetch fresh data from scraper without touching the database
+            scraped_data = await self.scraper_service.fetch_squad_data()
+            
+            # Validate the scraped data
+            if not scraped_data or "squad" not in scraped_data:
+                return {
+                    "success": False,
+                    "error": "No players data returned from scraper"
+                }
+            
+            squad_data = scraped_data["squad"]
+            if not isinstance(squad_data, list) or len(squad_data) == 0:
+                return {
+                    "success": False,
+                    "error": "Invalid or empty players data from scraper"
+                }
+            
+            # Validate individual player records
+            valid_players = []
+            for player_data in squad_data:
+                if not isinstance(player_data, dict):
+                    logger.warning(f"Skipping invalid player data: {player_data}")
+                    continue
+                    
+                # Check required fields
+                if not player_data.get("name"):
+                    logger.warning(f"Skipping player without name: {player_data}")
+                    continue
+                    
+                valid_players.append(player_data)
+            
+            if len(valid_players) == 0:
+                return {
+                    "success": False,
+                    "error": "No valid players found in scraped data"
+                }
+            
+            logger.info(f"Validated {len(valid_players)} players from scraper")
+            
+            # Data is valid, now proceed with database update
+            # Clear existing players data
+            await self._clear_table_data("players")
+            
+            # Insert new validated players data
+            inserted_count = 0
+            for player_data in valid_players:
+                try:
+                    player_create = PlayerCreate(
+                        name=player_data.get("name", "Unknown"),
+                        position=player_data.get("position"),
+                        age=player_data.get("age"),
+                        nationality=player_data.get("nationality"),
+                        photo=player_data.get("photo"),
+                        number=player_data.get("number"),
+                        matches=player_data.get("matches", 0),
+                        goals=player_data.get("goals", 0),
+                        assists=player_data.get("assists", 0)
+                    )
+                    
+                    result = await self.db_service.create_record("players", player_create.model_dump())
+                    if result["success"]:
+                        inserted_count += 1
+                    else:
+                        logger.warning(f"Failed to insert player {player_data.get('name')}: {result.get('error')}")
+                except Exception as e:
+                    logger.warning(f"Error creating player record for {player_data.get('name')}: {e}")
+            
+            # Update cache status
+            await self._update_cache_status("players", is_updating=False, last_scraped=datetime.now())
+            
+            logger.info(f"Successfully loaded {inserted_count} players to database")
+            return {
+                "success": True,
+                "count": inserted_count,
+                "message": f"Loaded {inserted_count} players to database"
+            }
+            
+        except Exception as e:
+            logger.exception("Error in manual players load")
+            return {
+                "success": False,
+                "error": f"Database load failed: {str(e)}"
+            }
+
+    async def manual_load_fixtures(self) -> Dict[str, Any]:
+        """
+        Manually load fresh fixtures data to database with validation.
+        """
+        logger.info("Starting manual fixtures data load with validation")
+        
+        try:
+            # First, fetch fresh data from scraper without touching the database
+            scraped_data = await self.scraper_service.fetch_fixtures_data()
+            
+            # Validate the scraped data
+            if not scraped_data or "pastFixtures" not in scraped_data:
+                return {
+                    "success": False,
+                    "error": "No fixtures data returned from scraper"
+                }
+            
+            fixtures_data = scraped_data["pastFixtures"]
+            if not isinstance(fixtures_data, list) or len(fixtures_data) == 0:
+                return {
+                    "success": False,
+                    "error": "Invalid or empty fixtures data from scraper"
+                }
+            
+            # Validate individual fixture records
+            valid_fixtures = []
+            for fixture_data in fixtures_data:
+                if not isinstance(fixture_data, dict):
+                    logger.warning(f"Skipping invalid fixture data: {fixture_data}")
+                    continue
+                    
+                # Check required fields
+                if not fixture_data.get("homeTeam") or not fixture_data.get("awayTeam"):
+                    logger.warning(f"Skipping fixture without teams: {fixture_data}")
+                    continue
+                    
+                valid_fixtures.append(fixture_data)
+            
+            if len(valid_fixtures) == 0:
+                return {
+                    "success": False,
+                    "error": "No valid fixtures found in scraped data"
+                }
+            
+            logger.info(f"Validated {len(valid_fixtures)} fixtures from scraper")
+            
+            # Data is valid, now proceed with database update
+            # Clear existing fixtures data
+            await self._clear_table_data("fixtures")
+            
+            # Insert new validated fixtures data
+            inserted_count = 0
+            for fixture_data in valid_fixtures:
+                try:
+                    # Parse date if it exists
+                    fixture_date = None
+                    if fixture_data.get("date"):
+                        try:
+                            fixture_date = datetime.fromisoformat(fixture_data["date"].replace('Z', '+00:00')).date()
+                        except:
+                            logger.warning(f"Could not parse date: {fixture_data.get('date')}")
+                    
+                    fixture_create = FixtureCreate(
+                        fixture_date=fixture_date,
+                        home_team=fixture_data.get("homeTeam"),
+                        away_team=fixture_data.get("awayTeam"),
+                        home_logo=fixture_data.get("homeLogo"),
+                        away_logo=fixture_data.get("awayLogo"),
+                        competition=fixture_data.get("competition"),
+                        round=fixture_data.get("round"),
+                        venue=fixture_data.get("venue"),
+                        home_score=fixture_data.get("homeScore"),
+                        away_score=fixture_data.get("awayScore"),
+                        result=fixture_data.get("result"),
+                        attendance=fixture_data.get("attendance"),
+                        referee=fixture_data.get("referee")
+                    )
+                    
+                    # Convert date objects to strings for JSON serialization
+                    fixture_dict = fixture_create.model_dump()
+                    if fixture_dict.get('fixture_date'):
+                        fixture_dict['fixture_date'] = fixture_dict['fixture_date'].isoformat()
+                    
+                    result = await self.db_service.create_record("fixtures", fixture_dict)
+                    if result["success"]:
+                        inserted_count += 1
+                    else:
+                        logger.warning(f"Failed to insert fixture {fixture_data.get('homeTeam')} vs {fixture_data.get('awayTeam')}: {result.get('error')}")
+                except Exception as e:
+                    logger.warning(f"Error creating fixture record: {e}")
+            
+            # Update cache status
+            await self._update_cache_status("fixtures", is_updating=False, last_scraped=datetime.now())
+            
+            logger.info(f"Successfully loaded {inserted_count} fixtures to database")
+            return {
+                "success": True,
+                "count": inserted_count,
+                "message": f"Loaded {inserted_count} fixtures to database"
+            }
+            
+        except Exception as e:
+            logger.exception("Error in manual fixtures load")
+            return {
+                "success": False,
+                "error": f"Database load failed: {str(e)}"
+            }
+
+    async def manual_load_standings(self) -> Dict[str, Any]:
+        """
+        Manually load fresh standings data to database with validation.
+        """
+        logger.info("Starting manual standings data load with validation")
+        
+        try:
+            # First, fetch fresh data from scraper without touching the database
+            scraped_data = await self.scraper_service.fetch_standings_data()
+            
+            # Validate the scraped data
+            if not scraped_data or "leaguePosition" not in scraped_data:
+                return {
+                    "success": False,
+                    "error": "No standings data returned from scraper"
+                }
+            
+            league_pos = scraped_data["leaguePosition"]
+            if not isinstance(league_pos, dict):
+                return {
+                    "success": False,
+                    "error": "Invalid standings data format from scraper"
+                }
+            
+            # Validate required fields
+            required_fields = ["position", "points", "played"]
+            for field in required_fields:
+                if league_pos.get(field) is None:
+                    return {
+                        "success": False,
+                        "error": f"Missing required field '{field}' in standings data"
+                    }
+            
+            logger.info("Validated standings data from scraper")
+            
+            # Data is valid, now proceed with database update
+            # Clear existing standings data
+            await self._clear_table_data("standings")
+            
+            # Insert new validated standings data
+            try:
+                standing_create = StandingCreate(
+                    position=league_pos.get("position"),
+                    points=league_pos.get("points"),
+                    played=league_pos.get("played"),
+                    won=league_pos.get("won"),
+                    drawn=league_pos.get("drawn"),
+                    lost=league_pos.get("lost"),
+                    goal_difference=league_pos.get("goalDifference"),
+                    season="2024-25"
+                )
+                
+                result = await self.db_service.create_record("standings", standing_create.model_dump())
+                if not result["success"]:
+                    return {
+                        "success": False,
+                        "error": f"Failed to insert standings: {result.get('error')}"
+                    }
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"Error creating standings record: {str(e)}"
+                }
+            
+            # Update cache status
+            await self._update_cache_status("standings", is_updating=False, last_scraped=datetime.now())
+            
+            logger.info("Successfully loaded standings to database")
+            return {
+                "success": True,
+                "message": "Loaded standings data to database"
+            }
+            
+        except Exception as e:
+            logger.exception("Error in manual standings load")
+            return {
+                "success": False,
+                "error": f"Database load failed: {str(e)}"
+            } 

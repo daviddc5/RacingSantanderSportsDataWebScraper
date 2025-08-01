@@ -15,7 +15,7 @@ class FBrefScraperService:
     """
     
     def __init__(self):
-        self.base_url = "https://fbref.com/en/squads/dee3bbc8/Racing-Santander-Stats"
+        self.base_url = "https://fbref.com/en/squads/dee3bbc8/2024-2025/Racing-Santander-Stats"
         
         # Separate caches for different data types
         self.squad_cache = None
